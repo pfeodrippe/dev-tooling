@@ -147,14 +147,13 @@
 (defn analyze-attributes
   "Receive `attributes` list, which are the nodes in the Pathom used
   as a starting point to reach other attributes."
-  [pathom attributes]
+  [parser attributes]
   (let [available-data (->> attributes
                             (mapv (fn [attr] [attr {}]))
                             (into {}))
 
         env
-        (-> ((:pathom-env pathom)
-             nil [::pco/indexes])
+        (-> (parser nil [::pco/indexes])
             ::pco/indexes)]
     {:env env
      :reachable-paths (reachable-paths env available-data)

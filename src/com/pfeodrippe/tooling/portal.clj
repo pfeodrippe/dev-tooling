@@ -187,7 +187,7 @@
                       :name `exercise-schema})
 
 (defn datafy-keywords
-  [pathom]
+  [parser]
   (extend-protocol protocols/Datafiable
     clojure.lang.Keyword
     (datafy [v]
@@ -199,7 +199,7 @@
                      (catch Exception _))
 
                 {:keys [reachable-paths reachable-joins env]}
-                (-> (tool.pathom/analyze-attributes pathom [v]))
+                (-> (tool.pathom/analyze-attributes parser [v]))
 
                 global?
                 #(->> env ::pco/index-attributes % ::pco/attr-reach-via
@@ -220,7 +220,7 @@
                     grouped-reachable-joins (->> reachable-joins
                                                  (mapv (fn [[k v]]
                                                          (let [grouped-v
-                                                               (->> (-> (tool.pathom/analyze-attributes pathom (keys v))
+                                                               (->> (-> (tool.pathom/analyze-attributes parser (keys v))
                                                                         :reachable-paths
                                                                         keys
                                                                         sort)
@@ -245,7 +245,7 @@
                                                           (if (= k :malli/schema)
                                                             (exercise-schema v)
                                                             (datafy/datafy v)))}))
-                            ;; Create navegable namespaces
+                            ;; Create navigable namespaces.
                             :namespaces (with-meta (->> namespace->reachable-paths
                                                         (remove #(every? global? (keys (last %))))
                                                         keys
