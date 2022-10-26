@@ -91,7 +91,7 @@
 (defmethod reader/clojurize* :tag-name [node]
   (let [node-value (-> node :content first reader/read-string*)]
     (if (keyword? node-value)
-      [`gravie.dev.clerk.parser/prose-parser {:tag-name node-value}]
+      [`prose-parser {:tag-name node-value}]
       [node-value])))
 
 ;; Alter main parser so we can accept Prose markup.

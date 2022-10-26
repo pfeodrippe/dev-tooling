@@ -1,7 +1,7 @@
 (ns com.pfeodrippe.tooling.clerk.portal
   (:require
    [nextjournal.clerk :as clerk]
-   [user.portal]
+   [com.pfeodrippe.tooling.portal :as tool.portal]
    [portal.api :as portal]))
 
 (defn- submit
@@ -51,7 +51,7 @@
    :transform-fn
    (fn [value]
      (clerk/with-viewer portal-viewer
-       (user.portal/analyze-pathom-result (:nextjournal/value value))))})
+       (tool.portal/analyze-pathom-result (:nextjournal/value value))))})
 
 (comment
 
