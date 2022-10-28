@@ -1,6 +1,9 @@
 (ns com.pfeodrippe.tooling.instrumentation
   (:require
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [nextjournal.clerk :as clerk]
+   [com.wsscode.pathom.connect :as-alias pco]
+   [nextjournal.clerk.viewer :as clerk.viewer]))
 
 (defn find-vars
   "Find vars in your project according to one or more of the following queries:
@@ -35,31 +38,86 @@
   (doseq [v vars]
     (case mode
       :instrument
-      (let [original-fn (or (::original-fn (meta v))
-                            (deref v))
-            input-output* (atom [])]
-        (when (and (not (::input-output (meta v)))
-                   (fn? original-fn))
-          (alter-meta! v assoc
-                       ::original-fn original-fn
-                       ::input-output input-output*
-                       ::original-meta (meta v))
-          (alter-var-root v (constantly (fn [& args]
-                                          (let [value (apply original-fn args)]
-                                            (swap! *var->info update-in [v :input-output]
-                                                   (comp vec conj) {:input args
-                                                                    :output value})
-                                            (swap! input-output* conj {:input args
-                                                                       :output value})
-                                            value))))))
+      (cond
+        ;; Check if it's a Pathom resolver.
+        (::pco/resolve @v)
+        (let [original-fn (::pco/resolve @v)
+              input-output* (atom [])]
+          (when (not (::input-output (meta v)))
+            (alter-meta! v assoc
+                         ::original-fn original-fn
+                         ::input-output input-output*
+                         ::original-meta (meta v))
+            (alter-var-root v assoc ::pco/resolve (fn [env input]
+                                                    (let [value (original-fn env input)]
+                                                      (swap! *var->info update-in [v :input-output]
+                                                             (comp vec conj) {:input input
+                                                                              :output value})
+                                                      (swap! input-output* conj {:input input
+                                                                                 :output value})
+                                                      value)))))
+
+        :else
+        (let [original-fn (or (::original-fn (meta v))
+                              (deref v))
+              input-output* (atom [])]
+          (when (and (not (::input-output (meta v)))
+                     (fn? original-fn))
+            (alter-meta! v assoc
+                         ::original-fn original-fn
+                         ::input-output input-output*
+                         ::original-meta (meta v))
+            (alter-var-root v (constantly (fn [& args]
+                                            (let [value (apply original-fn args)]
+                                              (swap! *var->info update-in [v :input-output]
+                                                     (comp vec conj) {:input args
+                                                                      :output value})
+                                              (swap! input-output* conj {:input args
+                                                                         :output value})
+                                              value)))))))
 
       :unstrument
-      (when-let [original-fn (::original-fn (meta v))]
-        (when (:doc (::original-meta (meta v)))
-          (alter-meta! v assoc :doc (:doc (::original-meta (meta v)))))
-        (alter-meta! v dissoc ::original-fn ::input-output ::original-meta :malli/schema)
-        (alter-var-root v (constantly original-fn))))))
+      (cond
+        (::pco/resolve @v)
+        (when-let [original-fn (::original-fn (meta v))]
+          (when (:doc (::original-meta (meta v)))
+            (alter-meta! v assoc :doc (:doc (::original-meta (meta v)))))
+          (alter-meta! v dissoc ::original-fn ::input-output ::original-meta :malli/schema)
+          (alter-var-root v assoc ::pco/resolve original-fn))
+
+        :else
+        (when-let [original-fn (::original-fn (meta v))]
+          (when (:doc (::original-meta (meta v)))
+            (alter-meta! v assoc :doc (:doc (::original-meta (meta v)))))
+          (alter-meta! v dissoc ::original-fn ::input-output ::original-meta :malli/schema)
+          (alter-var-root v (constantly original-fn)))))))
 
 (defn get-var-info
   [v]
   (get @*var->info v))
+
+(def ^:private var-viewer
+  "This viewer shows instrumented data (if available), otherwise acts as a
+  normal var viewer."
+  {:name ::var-viewer
+   :pred clerk.viewer/var-from-def?
+   :transform-fn (clerk.viewer/update-val
+                  (fn [v]
+                    (let [f ((comp deref ::clerk/var-from-def) v)]
+                      (if-some [{:keys [input-output]} (get-var-info (::clerk/var-from-def v))]
+                        [f {:input-output input-output}]
+                        f))))})
+
+(def additional-viewers
+  [var-viewer])
+
+(def ^:private updated-viewers
+  (clerk.viewer/add-viewers
+   (->> (clerk.viewer/get-default-viewers)
+        ;; Remove viewers with the same name so you don't have
+        ;; duplicated ones.
+        (remove (comp (set (mapv :name additional-viewers))
+                      :name)))
+   additional-viewers))
+
+(clerk.viewer/reset-viewers! :default updated-viewers)
