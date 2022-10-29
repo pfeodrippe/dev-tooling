@@ -188,7 +188,7 @@
                           v))}))
 
   (portal-rt/register! #'exercise-schema
-                       {:predicate m/schema
+                       {:predicate #(m/schema % options)
                         :name `exercise-schema})
 
   (extend-protocol protocols/Datafiable
