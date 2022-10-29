@@ -172,27 +172,30 @@
   (with-meta [:portal.viewer/html (hiccup/html v)]
     {:portal.viewer/default :portal.viewer/hiccup}))
 
-(defn exercise-schema
-  "Exercise a schema, returning Malli generated samples. Adds a `nav` to it so
-  you can generate it again by navigating into the `:malli/generated` keyword."
-  [schema]
-  (with-meta {:malli/generated (pprint (mg/sample (m/schema schema)))}
-    {`protocols/nav (fn [_coll k v]
-                      (if (and (nil? k) (= v :malli/generated))
-                        (exercise-schema schema)
-                        v))}))
-
-(portal-rt/register! #'exercise-schema
-                     {:predicate m/schema
-                      :name `exercise-schema})
-
 (defn datafy-keywords
-  [parser]
+  "Extend Datafiable protocol for keywords so we can check if they are a Pathom 2 attribute.
+
+  Also define `exercise-schema` function which will be registerd in Portal as a command."
+  [parser options]
+  (defn exercise-schema
+    "Exercise a schema, returning Malli generated samples. Adds a `nav` to it so
+  you can generate it again by navigating into the `:malli/generated` keyword."
+    [schema]
+    (with-meta {:malli/generated (pprint (mg/sample (m/schema schema options)))}
+      {`protocols/nav (fn [_coll k v]
+                        (if (and (nil? k) (= v :malli/generated))
+                          (exercise-schema schema)
+                          v))}))
+
+  (portal-rt/register! #'exercise-schema
+                       {:predicate m/schema
+                        :name `exercise-schema})
+
   (extend-protocol protocols/Datafiable
     clojure.lang.Keyword
     (datafy [v]
       (or (let [schema
-                (try (some-> (m/deref-all v)
+                (try (some-> (m/deref-all v options)
                              pr-str
                              edn/read-string
                              pprint)
@@ -240,7 +243,9 @@
                                                  (into (sorted-map)))]
                 (with-meta {:schema (when schema
                                       (with-meta (merge {:malli/schema schema}
-                                                        (m/properties (m/deref (m/schema v))))
+                                                        (m/properties (m/deref (m/schema v options)
+                                                                               options)
+                                                                      options))
                                         {`protocols/nav (fn [_coll k v]
                                                           (if (= k :malli/schema)
                                                             (exercise-schema v)

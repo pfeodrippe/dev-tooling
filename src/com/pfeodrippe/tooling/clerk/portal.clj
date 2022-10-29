@@ -11,14 +11,17 @@
 (defonce *portal (atom nil))
 
 (defn setup-portal
-  [launcher]
-  (or @*portal
-      (do
-        (remove-tap #'submit)
-        (add-tap #'submit)
-        (reset! *portal
-                (portal/open {:launcher launcher
-                              :theme :portal.colors/nord-light})))))
+  ([launcher]
+   (setup-portal launcher {}))
+  ([launcher opts]
+   (or @*portal
+       (do
+         (remove-tap #'submit)
+         (add-tap #'submit)
+         (reset! *portal
+                 (portal/open (merge {:launcher launcher
+                                      :theme :portal.colors/nord-light}
+                                     opts)))))))
 
 (def portal-viewer
   {:name :portal
