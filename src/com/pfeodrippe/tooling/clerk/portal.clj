@@ -1,5 +1,6 @@
 (ns com.pfeodrippe.tooling.clerk.portal
   (:require
+   [clojure.string :as str]
    [nextjournal.clerk :as clerk]
    [com.pfeodrippe.tooling.portal :as tool.portal]
    [portal.api :as portal]))
@@ -27,18 +28,22 @@
   {:name :portal
    :transform-fn
    (fn [value]
-     (cond
-       (instance? portal.runtime.jvm.client.Portal (:nextjournal/value value))
-       (portal/url (:nextjournal/value value))
+     (let [portal-url (cond
+                        (instance? portal.runtime.jvm.client.Portal (:nextjournal/value value))
+                        (portal/url (:nextjournal/value value))
 
-       (seq (:nextjournal/value value))
-       (portal/url
-        (portal/open {:launcher false
-                      :value (:nextjournal/value value)
-                      :theme :portal.colors/nord-light}))
+                        (seq (:nextjournal/value value))
+                        (portal/url
+                         (portal/open {:launcher false
+                                       :value (:nextjournal/value value)
+                                       :theme :portal.colors/nord-light}))
 
-       :else
-       (portal/url (setup-portal false))))
+                        :else
+                        (portal/url (setup-portal false)))]
+       (if-let [portal-host (System/getenv "PORTAL_HOST")]
+         (str "http://" portal-host "?"
+              (-> portal-url (str/split #"\?") last))
+         portal-url)))
    :render-fn '#(v/html [:iframe
                          {:src %
                           :style {:width "100%"
