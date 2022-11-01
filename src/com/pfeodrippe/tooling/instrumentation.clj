@@ -3,7 +3,9 @@
    [clojure.string :as str]
    [nextjournal.clerk :as clerk]
    [com.wsscode.pathom.connect :as-alias pco]
-   [nextjournal.clerk.viewer :as clerk.viewer]))
+   [nextjournal.clerk.viewer :as clerk.viewer]
+   [com.pfeodrippe.tooling.clerk.portal :as tool.clerk.portal]
+   [com.pfeodrippe.tooling.portal :as tool.portal]))
 
 (defn find-vars
   "Find vars in your project according to one or more of the following queries:
@@ -105,7 +107,11 @@
                   (fn [v]
                     (let [f ((comp deref ::clerk/var-from-def) v)]
                       (if-some [{:keys [input-output]} (get-var-info (::clerk/var-from-def v))]
-                        [f {:input-output input-output}]
+                        (clerk.viewer/with-viewer tool.clerk.portal/portal-viewer
+                          (mapv #(-> %
+                                     (update :input tool.portal/tree)
+                                     (update :output tool.portal/tree))
+                                input-output))
                         f))))})
 
 (def additional-viewers
