@@ -49,8 +49,10 @@
         :nextjournal/width :full}))
    :render-fn '#(v/html [:iframe
                          {:src %
-                          :style {:width "100%"
-                                  :height "50vh"
+                          :style {:width "90%"
+                                  :height "60vh"
+                                  :margin-left :auto
+                                  :margin-right :auto
                                   :border-left "1px solid #d8dee9"
                                   :border-right "1px solid #d8dee9"
                                   :border-bottom "1px solid #d8dee9"
