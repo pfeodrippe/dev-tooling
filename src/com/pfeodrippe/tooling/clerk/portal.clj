@@ -40,10 +40,13 @@
 
                         :else
                         (portal/url (setup-portal false)))]
-       (if-let [portal-host (System/getenv "PORTAL_HOST")]
-         (str "http://" portal-host "?"
-              (-> portal-url (str/split #"\?") last))
-         portal-url)))
+       {:nextjournal/value
+        (if-let [portal-host (System/getenv "PORTAL_HOST")]
+          (str "http://" portal-host "?"
+               (-> portal-url (str/split #"\?") last))
+          portal-url)
+
+        :nextjournal/width :full}))
    :render-fn '#(v/html [:iframe
                          {:src %
                           :style {:width "100%"
