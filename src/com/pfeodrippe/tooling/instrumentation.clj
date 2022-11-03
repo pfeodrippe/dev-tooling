@@ -1,11 +1,12 @@
 (ns com.pfeodrippe.tooling.instrumentation
   (:require
    [clojure.string :as str]
-   [nextjournal.clerk :as clerk]
-   [com.wsscode.pathom.connect :as-alias pco]
-   [nextjournal.clerk.viewer :as clerk.viewer]
+   [clojure.test :as t]
    [com.pfeodrippe.tooling.clerk.portal :as tool.clerk.portal]
-   [com.pfeodrippe.tooling.portal :as tool.portal]))
+   [com.pfeodrippe.tooling.portal :as tool.portal]
+   [com.wsscode.pathom.connect :as-alias pco]
+   [nextjournal.clerk :as clerk]
+   [nextjournal.clerk.viewer :as clerk.viewer]))
 
 (defn find-vars
   "Find vars in your project according to one or more of the following queries:
@@ -53,8 +54,12 @@
             (alter-var-root v assoc ::pco/resolve (fn [env input]
                                                     (let [value (original-fn env input)]
                                                       (swap! *var->info update-in [v :input-output]
-                                                             (comp vec conj) {:input input
-                                                                              :output value})
+                                                             (comp vec conj)
+                                                             (merge {:input input
+                                                                     :output value}
+                                                                    (when (seq t/*testing-vars*)
+                                                                      {:testing-contexts (reverse t/*testing-contexts*)
+                                                                       :testing-vars t/*testing-vars*})))
                                                       (swap! input-output* conj {:input input
                                                                                  :output value})
                                                       value)))))
@@ -72,8 +77,12 @@
             (alter-var-root v (constantly (fn [& args]
                                             (let [value (apply original-fn args)]
                                               (swap! *var->info update-in [v :input-output]
-                                                     (comp vec conj) {:input args
-                                                                      :output value})
+                                                     (comp vec conj)
+                                                     (merge {:input args
+                                                             :output value}
+                                                            (when (seq t/*testing-vars*)
+                                                              {:testing-contexts (reverse t/*testing-contexts*)
+                                                               :testing-vars t/*testing-vars*})))
                                               (swap! input-output* conj {:input args
                                                                          :output value})
                                               value)))))))
@@ -108,11 +117,16 @@
                     (let [f ((comp deref ::clerk/var-from-def) v)]
                       (if-some [{:keys [input-output]} (get-var-info (::clerk/var-from-def v))]
                         (clerk.viewer/with-viewer tool.clerk.portal/portal-viewer
-                          (with-meta (mapv #(-> %
-                                                (update :input tool.portal/tree)
-                                                (update :output tool.portal/tree))
-                                           input-output)
-                            {:portal.runtime/type (::clerk/var-from-def v)}))
+                          (-> (mapv #(-> %
+                                         (select-keys [:input :output])
+                                         (update :input tool.portal/tree)
+                                         (update :output tool.portal/tree)
+                                         (vary-meta merge
+                                                    (when-let [testing-var (first (:testing-vars %))]
+                                                      {:portal.runtime/type testing-var})))
+                                    input-output)
+                              (vary-meta merge
+                                         {:portal.runtime/type (::clerk/var-from-def v)})))
                         f))))})
 
 (def additional-viewers
