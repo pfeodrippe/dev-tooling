@@ -108,10 +108,11 @@
                     (let [f ((comp deref ::clerk/var-from-def) v)]
                       (if-some [{:keys [input-output]} (get-var-info (::clerk/var-from-def v))]
                         (clerk.viewer/with-viewer tool.clerk.portal/portal-viewer
-                          (mapv #(-> %
-                                     (update :input tool.portal/tree)
-                                     (update :output tool.portal/tree))
-                                input-output))
+                          (with-meta (mapv #(-> %
+                                                (update :input tool.portal/tree)
+                                                (update :output tool.portal/tree))
+                                           input-output)
+                            {:portal.runtime/type (::clerk/var-from-def v)}))
                         f))))})
 
 (def additional-viewers
