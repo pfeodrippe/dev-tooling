@@ -30,6 +30,7 @@
   (fn [opts & _]
     ((juxt :output-format :tag-name) opts)))
 
+;; == Built-in tags.
 ;; By default, a tag just returns a stringfied list.
 (defmethod prose->output :default
   [{:keys [tag-name]} & args]
@@ -53,6 +54,68 @@
   [opts & args]
   {:type :paragraph, :content (adapt-content opts args)})
 
+(defmethod prose->output [:md :page-name]
+  [opts & content]
+  {:type :plain
+   :content [{:type :heading
+              :content (adapt-content opts content)
+              :heading-level 1}]
+   :toc [1 (adapt-content opts content)]})
+
+(defmethod prose->output [:md :title]
+  [opts & content]
+  {:type :plain
+   :content [{:type :heading
+              :content (adapt-content opts content)
+              :heading-level 2}]
+   :toc [2 (adapt-content opts content)]})
+
+(defmethod prose->output [:md :subtitle]
+  [opts & content]
+  {:type :plain
+
+   :content [{:type :heading
+              :content (adapt-content opts content)
+              :heading-level 3}]
+   :toc [3 (adapt-content opts content)]})
+
+(defmethod prose->output [:md :link]
+  [opts & content]
+  {:type :link
+   :content (adapt-content opts content)
+   :attrs {:href (first content)}})
+
+(defmethod prose->output [:md :command]
+  [opts & content]
+  {:type :monospace
+   :content (adapt-content opts content)})
+
+(defmethod prose->output [:md :code]
+  [opts & content]
+  {:type :monospace
+   :content (adapt-content opts content)})
+
+(defmethod prose->output [:md :todo-list]
+  [opts & content]
+  {:type :plain
+   :content [{:type :em
+              :content [{:type :text :text "TODO"}]}
+             {:type :todo-list
+              :content (adapt-content opts content)}]})
+
+(defmethod prose->output [:md :todo-item]
+  [{:keys [done] :as opts} & content]
+  {:type :todo-item
+   :content (adapt-content opts content)
+   :attrs {:checked done}})
+
+;; `:comment` hides the content. It's analogous to the comment macro
+;; in Clojure.
+(defmethod prose->output [:md :comment]
+  [_opts & _content]
+  {:type :text :text ""})
+
+;; == Main
 (defn prose-parser
   "Called when a keyword tag is found.
 
