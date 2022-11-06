@@ -172,8 +172,19 @@
 ;; Override :tag-name dispatcher so we can dispatch on keywords.
 (defmethod reader/clojurize* :tag-name [node]
   (let [node-value (-> node :content first reader/read-string*)]
-    (if (keyword? node-value)
+    (cond
+      (keyword? node-value)
       [`prose-parser {:tag-name node-value}]
+
+      ;; If we have a symbol that does not resolve to var, make it
+      ;; a keyword so it can be called as a tag.
+      (and (symbol? node-value)
+           (nil? (requiring-resolve (if (qualified-symbol? node-value)
+                                      node-value
+                                      (symbol (str *ns*) (name node-value))))))
+      [`prose-parser {:tag-name (keyword node-value)}]
+
+      :else
       [node-value])))
 
 ;; Alter main parser so we can accept Prose markup.
