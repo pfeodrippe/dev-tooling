@@ -82,7 +82,9 @@
 (defmethod prose->output [:md :link]
   [opts & content]
   {:type :link
-   :content (adapt-content opts content)
+   :content (adapt-content opts (if (= (count content) 1)
+                                  content
+                                  (drop 1 content)))
    :attrs {:href (first content)}})
 
 (defmethod prose->output [:md :command]

@@ -1,0 +1,12 @@
+{:tasks
+ {:init
+  (def args *command-line-args*)
+
+  build
+  {:task (clojure (format "-T:build org.corfield.build/jar :transitive true :lib io.github.pfeodrippe/dev-tooling :version '\"%s\"'"
+                          (first args)))}
+
+  deploy
+  {:depends [build]
+   :task (clojure (format "-T:build org.corfield.build/deploy :lib io.github.pfeodrippe/dev-tooling :version '\"%s\"'"
+                          (first args)))}}}
