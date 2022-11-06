@@ -59,7 +59,24 @@
   E.g. `◊:my-keyword{my text}` would give us a `:tag-name` of `:my-keyword` and
   the text as args."
   [opts & args]
-  (let [result (apply prose->output (assoc opts :output-format :md) args)]
+  (let [arg-maps (->> args
+                      (take-while #(or (and (map? %)
+                                            ;; Clojure args have metadata associated with them.
+                                            (contains? (set (keys (meta %))) :row))
+                                       (keyword? %)))
+                      (map (fn [v]
+                             ;; Just like Clojure metadata,
+                             ;; convert keywords to maps with
+                             ;; the field set to `true`.
+                             (if (keyword? v)
+                               {v true}
+                               v))))
+        result (apply prose->output
+                      (merge (assoc opts :output-format :md)
+                             ;; Apply maps from left to right.
+                             (apply merge arg-maps))
+                      ;; Remove maps that are being merged with `opts`.
+                      (drop (count arg-maps) args))]
     (if (string? result)
       {:type :text
        :text result}
