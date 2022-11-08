@@ -117,6 +117,17 @@
   [_opts & _content]
   {:type :text :text ""})
 
+(defmethod prose->output [:md :numbered-list]
+  [opts & content]
+  {:type :numbered-list
+   :content (->> content
+                 (partition-by #{::hard-break})
+                 (remove #{'(::hard-break)})
+                 (mapv (fn [v]
+                         {:type :list-item
+                          :content (adapt-content opts v)}))
+                 (adapt-content opts))})
+
 ;; == Main
 (defn prose-parser
   "Called when a keyword tag is found.
