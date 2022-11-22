@@ -333,7 +333,7 @@
 
 (def notebook-viewer
   {:name :clerk/notebook
-   :render-fn (quote v/notebook-viewer)
+   :render-fn 'nextjournal.clerk.render/render-notebook
    :transform-fn (fn [{:as wrapped-value :nextjournal/keys [viewers]}]
                    (-> wrapped-value
                        (update :nextjournal/value (partial process-blocks viewers))
