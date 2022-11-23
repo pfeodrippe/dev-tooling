@@ -286,8 +286,8 @@
 
 (defn process-query
   [parser entity query]
-  (let [result (-> (parser {} [{(list (first entity) {:pathom/context (into {} (rest entity))})
-                                query}])
+  ;; TODO: Not working yet.
+  (let [result (-> ((requiring-resolve 'com.wsscode.pathom3.interface.eql/process) parser entity query)
                    (update :com.wsscode.pathom/trace
                            (fn [trace]
                              (walk/postwalk
