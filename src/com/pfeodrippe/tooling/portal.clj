@@ -3,9 +3,7 @@
    [clojure.core.protocols :as protocols]
    [clojure.datafy :as datafy]
    [clojure.edn :as edn]
-   [clojure.string :as str]
-   [clojure.walk :as walk]
-   [com.wsscode.pathom.connect :as-alias pco]
+   [com.wsscode.pathom3.connect.operation :as-alias pco]
    [com.pfeodrippe.tooling.pathom :as tool.pathom]
    [hiccup.core :as hiccup]
    [malli.core :as m]
@@ -176,7 +174,7 @@
   "Extend Datafiable protocol for keywords so we can check if they are a Pathom 2 attribute.
 
   Also define `exercise-schema` function which will be registerd in Portal as a command."
-  [parser options]
+  [pathom-env options]
   (defn exercise-schema
     "Exercise a schema, returning Malli generated samples. Adds a `nav` to it so
   you can generate it again by navigating into the `:malli/generated` keyword."
@@ -202,7 +200,7 @@
                      (catch Exception _))
 
                 {:keys [reachable-paths reachable-joins env]}
-                (-> (tool.pathom/analyze-attributes parser [v]))
+                (-> (tool.pathom/analyze-attributes pathom-env [v]))
 
                 global?
                 #(->> env ::pco/index-attributes % ::pco/attr-reach-via
@@ -223,7 +221,8 @@
                     grouped-reachable-joins (->> reachable-joins
                                                  (mapv (fn [[k v]]
                                                          (let [grouped-v
-                                                               (->> (-> (tool.pathom/analyze-attributes parser (keys v))
+                                                               (->> (-> (tool.pathom/analyze-attributes
+                                                                         pathom-env (keys v))
                                                                         :reachable-paths
                                                                         keys
                                                                         sort)
@@ -283,114 +282,6 @@
 (portal-rt/register! #'spec-exercise
                      {:predicate (constantly false)
                       :name 'clojure.spec.alpha/exercise})
-
-(defn process-query
-  [parser entity query]
-  ;; TODO: Not working yet.
-  (let [result (-> ((requiring-resolve 'com.wsscode.pathom3.interface.eql/process) parser entity query)
-                   (update :com.wsscode.pathom/trace
-                           (fn [trace]
-                             (walk/postwalk
-                              (fn [v]
-                                (if (:path v)
-                                  (-> (select-keys v [:path :details :children])
-                                      (update :details
-                                              (fn [details]
-                                                (->> details
-                                                     (filter #(= (:event %) "call-resolver"))
-                                                     (mapv #(select-keys % [:key :sym]))
-                                                     (mapv #(if (::pco/alias? (meta (:sym %)))
-                                                              {:sym {:alias {(first (::pco/input (meta (:sym %))))
-                                                                             (first (::pco/output (meta (:sym %))))}}}
-                                                              %))
-                                                     ;; Show details as a chain of resolvers.
-                                                     (mapv :sym)))))
-                                  v))
-                              trace))))]
-    (merge result
-           {:entity entity
-            :query query})))
-
-(defn- adapt-detail
-  [detail]
-  (if (:alias detail)
-    (format "`%s` -> `%s`"
-            (key (first (:alias detail)))
-            (val (first (:alias detail))))
-    (format "`%s`" detail)))
-
-(defn trace-event->markdown
-  [pathom-result event]
-  (let [current-attr (last (:path event))
-        details (:details event)
-        first-detail (first details)
-        output (get-in pathom-result (:path event))]
-    (cond
-      (and (= (count details) 1)
-           (map? first-detail)
-           (contains? first-detail :alias))
-      (format "To resolve `%s`, we just need one alias:\n%s"
-              current-attr
-              (->> details
-                   (mapv #(str "- " (adapt-detail %)))
-                   (str/join "\n")))
-
-      (seq details)
-      (format "To resolve `%s`, the following has happened in sequence:\n%s"
-              current-attr
-              (->> details
-                   (mapv #(str "1. " (adapt-detail %)))
-                   (str/join "\n")))
-
-      (and (keyword? current-attr)
-           (= (namespace current-attr) ">"))
-      (format "`%s` is a [placeholder](https://blog.wsscode.com/pathom/v2/pathom/2.2.0/core/placeholders.html), it's used to build the shape of the response"
-              current-attr)
-
-      (= (count (:path event)) 1)
-      (format "`%s` is the query, so no resolvers were needed for it as this information already exists"
-              current-attr)
-
-      (and (keyword? output)
-           (= (namespace output) "com.wsscode.pathom.core"))
-      (format "## Error
-Tried to resolve `%s`, but wasn't successful
-```clojure
-%s
-```"
-              current-attr
-              output)
-
-      :else
-      (format "The information for `%s` already exists in the cache, it was resolved by another attribute"
-              current-attr))))
-
-(defn analyze-pathom-result
-  [{:keys [com.wsscode.pathom/trace entity query] :as pathom-result}]
-  (let [collector (atom [])]
-    (walk/prewalk (fn [v]
-                    (if (:path v)
-                      (do (swap! collector conj (dissoc v :children))
-                          v)
-                      v))
-                  trace)
-    (let [output (get pathom-result (first entity))]
-      (-> (->> @collector
-               (filter (comp seq :path))
-               (remove (comp #{[:com.wsscode.pathom/trace]} :path))
-               (mapv #(let [result (get-in pathom-result (:path %))]
-                        (-> %
-                            (assoc :description (markdown (trace-event->markdown pathom-result %)))
-                            (dissoc :path :details)
-                            (with-meta {:portal.runtime/type (pprint (:path %))
-                                        :original-value (pprint %)})
-                            (merge (when (and (keyword? result)
-                                              (= (namespace result) "com.wsscode.pathom.core"))
-                                     {:error result}))))))
-          (with-meta {:entity entity
-                      :query query
-                      :output (pprint output)
-                      :portal.runtime/type :PATHOM_QUERY})))))
 
 (defn attribute
   "Get information about this attribute."

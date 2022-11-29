@@ -58,14 +58,6 @@
                                   :border-bottom "1px solid #d8dee9"
                                   :border-radius "2px"}}])})
 
-(def pathom-trace-viewer
-  {:name :pathom.trace/viewer
-   :pred :com.wsscode.pathom/trace
-   :transform-fn
-   (fn [value]
-     (clerk/with-viewer portal-viewer
-       (tool.portal/analyze-pathom-result (:nextjournal/value value))))})
-
 (comment
 
   ())
