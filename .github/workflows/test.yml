@@ -1,0 +1,17 @@
+---
+name: Test
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with: {java-version: '1.8'}
+      - uses: DeLaGuardo/setup-clojure@master
+        with: {cli: 1.11.1.1200, lein: 2.9.4}
+      - run: clojure -X com.wsscode.pathom3.demos.repro170/-main
