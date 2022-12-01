@@ -23,3 +23,5 @@ states/
 
 web_app/resources/public/compiled/
 .pitoco/
+
+.clerk/
