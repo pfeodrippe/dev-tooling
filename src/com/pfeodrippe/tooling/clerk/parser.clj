@@ -85,7 +85,8 @@
    :content (adapt-content opts (if (= (count content) 1)
                                   content
                                   (drop 1 content)))
-   :attrs {:href (first content)}})
+   :attrs {:href (first content)
+           :target "_blank"}})
 
 (defmethod prose->output [:md :command]
   [opts & content]
@@ -157,6 +158,17 @@
       {:type :text
        :text result}
       result)))
+
+(defn invoke-tag
+  "It should be used to invoke tags.
+
+  `args` should be a vector."
+  ([tag args]
+   (invoke-tag tag nil args))
+  ([tag opts args]
+   (apply prose-parser
+          (merge {:tag-name tag} opts)
+          args)))
 
 (defn- eval-clojurized
   [match]
@@ -266,7 +278,7 @@
                       (conj acc current-paragraph)
                       acc)))))
 
-(defn process-blocks [viewers {:as doc :keys [ns]}]
+(defn blocks->markdown [{:as doc :keys [ns]}]
   (let [updated-doc
         (-> doc
             (update :blocks
@@ -323,13 +335,18 @@
                                   :children []}))
                 (:toc updated-doc))]
     (-> updated-doc
-        (update :blocks (partial into [] (comp (mapcat (partial clerk.viewer/with-block-viewer doc))
-                                               (map (comp clerk.viewer/process-wrapped-value
-                                                          clerk.viewer/apply-viewers*
-                                                          (partial clerk.viewer/ensure-wrapped-with-viewers viewers))))))
         (select-keys [:blocks :toc :toc-visibility :title])
         (assoc :toc toc)
         (cond-> ns (assoc :scope (clerk.viewer/datafy-scope ns))))))
+
+(defn process-blocks [viewers doc]
+  (let [updated-doc (blocks->markdown doc)]
+    (-> updated-doc
+        (update :blocks (partial into []
+                                 (comp (mapcat (partial clerk.viewer/with-block-viewer doc))
+                                       (map (comp clerk.viewer/process-wrapped-value
+                                                  clerk.viewer/apply-viewers*
+                                                  (partial clerk.viewer/ensure-wrapped-with-viewers viewers)))))))))
 
 (def notebook-viewer
   {:name :clerk/notebook
@@ -369,6 +386,9 @@
 ;; - [ ] Add ability to query tags?
 ;;   - [ ] Can we add the response to the "DB"?
 ;; - [x] Revisit ToC
+;; - [ ] Create a helper function to call tags as functions
+;; - [ ] Create a tag that receives a html output and render it
+;;   - [ ] So it can be used for parsing tag calls from code
 
 (comment
 

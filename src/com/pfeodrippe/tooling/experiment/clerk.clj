@@ -39,6 +39,6 @@
 
 (comment
 
-  (clerk/serve! {:watch-paths ["src"]})
+  (clerk/serve! {:watch-paths ["src/com/pfeodrippe/tooling/experiment/"]})
 
   ())
