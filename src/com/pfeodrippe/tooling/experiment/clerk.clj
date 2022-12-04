@@ -1,6 +1,6 @@
 ^{:nextjournal.clerk/visibility {:code :hide}}
 (ns com.pfeodrippe.tooling.experiment.clerk
-  {:nextjournal.clerk/no-cache true}
+  #_{:nextjournal.clerk/no-cache true}
   (:require
    [nextjournal.clerk.viewer :as v]
    [nextjournal.clerk :as clerk]
@@ -20,9 +20,8 @@
 aside {
     width: 40%;
     padding-left: .5rem;
-    margin-left: .5rem;
-    float: right;
-    box-shadow: inset 5px 0 5px -5px #29627e;
+    margin-left: -330px;
+    float: left;
     font-style: italic;
     color: #29627e;
 }
