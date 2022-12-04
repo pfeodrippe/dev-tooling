@@ -129,7 +129,7 @@
                           :content (adapt-content opts v)}))
                  (adapt-content opts))})
 
-(defmethod prose->output [:md :note]
+#_(defmethod prose->output [:md :note]
   [opts & content]
   {:type :aside
    :content (adapt-content opts content)})
@@ -344,19 +344,52 @@
         (assoc :toc toc)
         (cond-> ns (assoc :scope (clerk.viewer/datafy-scope ns))))))
 
+(def ^:private custom-css
+  [:<>
+   [:style {:type "text/css"}
+    "
+aside {
+    width: 40%;
+    padding-left: .5rem;
+    margin-left: -330px;
+    float: left;
+    font-style: italic;
+    color: #29627e;
+}
+
+aside > p {
+    margin: .5rem;
+}
+
+p {
+    font-family: 'Fira Sans', sans-serif;
+    color: black;
+}
+"]])
+
 (defn process-blocks [viewers doc]
   (let [updated-doc (blocks->markdown doc)]
-    (-> updated-doc
-        (update :blocks (partial into []
-                                 (comp (mapcat (partial clerk.viewer/with-block-viewer doc))
-                                       (map (comp clerk.viewer/process-wrapped-value
-                                                  clerk.viewer/apply-viewers*
-                                                  (partial clerk.viewer/ensure-wrapped-with-viewers viewers)))))))))
+    (def bbb updated-doc)
+    (def aaa
+      (-> updated-doc
+          (update :blocks (partial into []
+                                   (comp (mapcat (partial clerk.viewer/with-block-viewer doc))
+                                         (map (comp clerk.viewer/process-wrapped-value
+                                                    clerk.viewer/apply-viewers*
+                                                    (partial clerk.viewer/ensure-wrapped-with-viewers viewers))))))
+          #_(update :blocks #(vec
+                              (concat
+                               [(clerk.viewer/mark-presented
+                                 (clerk.viewer/with-viewer {:name :html- :render-fn 'identity}
+                                   custom-css))]
+                               %)))))
+    aaa))
 
 (def notebook-viewer
   {:name :clerk/notebook
    :render-fn 'nextjournal.clerk.render/render-notebook
    :transform-fn (fn [{:as wrapped-value :nextjournal/keys [viewers]}]
+                   (def wrapped-value wrapped-value)
                    (-> wrapped-value
                        (update :nextjournal/value (partial process-blocks viewers))
                        clerk.viewer/mark-presented))})

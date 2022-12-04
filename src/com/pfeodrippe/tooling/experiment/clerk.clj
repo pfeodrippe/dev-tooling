@@ -4,19 +4,92 @@
   (:require
    [nextjournal.clerk.viewer :as v]
    [nextjournal.clerk :as clerk]
-   com.pfeodrippe.tooling.clerk.parser))
+   [com.pfeodrippe.tooling.clerk.parser :as tool.parser :refer [prose->output adapt-content]]
+   [nextjournal.clerk.render :as-alias render]))
 
 {::clerk/visibility {:code :hide :result :hide}}
 
 (def portal-url
   "https://cljdoc.org/d/djblue/portal")
 
+(defmethod prose->output [:md :note]
+  [opts & content]
+  {:type :aside
+   :content (adapt-content opts content)})
+
+(def viewer
+  (merge
+   tool.parser/notebook-viewer
+   {:render-fn
+    '(fn render-notebook [{:as _doc xs :blocks :keys [bundle? css-class toc toc-visibility]}]
+       (reagent/with-let [local-storage-key "clerk-navbar"
+                          !state (reagent/atom {:toc (render/toc-items (:children toc))
+                                                :md-toc toc
+                                                :dark-mode? (render/localstorage-get
+                                                             render/local-storage-dark-mode-key)
+                                                :theme {:slide-over "bg-slate-100 dark:bg-gray-800 font-sans border-r dark:border-slate-900"}
+                                                :width 220
+                                                :mobile-width 300
+                                                :local-storage-key local-storage-key
+                                                :set-hash? (not bundle?)
+                                                :open? (if-some [stored-open?
+                                                                 (render/localstorage-get local-storage-key)]
+                                                         stored-open?
+                                                         (not= :collapsed toc-visibility))})
+                          root-ref-fn #(when % (render/setup-dark-mode! !state))
+                          ref-fn #(when % (swap! !state assoc :scroll-el %))]
+         (let [{:keys [md-toc]} @!state]
+           (when-not (= md-toc toc)
+             (swap! !state assoc :toc (render/toc-items (:children toc)) :md-toc toc :open? (not= :collapsed toc-visibility)))
+           [:div.flex
+            {:ref root-ref-fn}
+            [:div.fixed.top-2.left-2.md:left-auto.md:right-2.z-10
+             [render/dark-mode-toggle !state]]
+            #_(when (and toc toc-visibility)
+              [:<>
+               [navbar/toggle-button !state
+                [:<>
+                 [icon/menu {:size 20}]
+                 [:span.uppercase.tracking-wider.ml-1.font-bold
+                  {:class "text-[12px]"} "ToC"]]
+                {:class "z-10 fixed right-2 top-2 md:right-auto md:left-3 md:top-3 text-slate-400 font-sans text-xs hover:underline cursor-pointer flex items-center bg-white dark:bg-gray-900 py-1 px-3 md:p-0 rounded-full md:rounded-none border md:border-0 border-slate-200 dark:border-gray-500 shadow md:shadow-none dark:text-slate-400 dark:hover:text-white"}]
+               [navbar/panel !state [navbar/navbar !state]]])
+            [:div.flex-auto.h-screen.overflow-y-auto.scroll-container
+             {:ref ref-fn}
+             [:div {:class (or css-class "flex flex-col items-center viewer-notebook flex-auto")}
+              (doall
+               (map-indexed (fn [idx x]
+                              (let [{viewer-name :name} (v/->viewer x)
+                                    viewer-css-class #_(v/css-class x) nil
+                                    inner-viewer-name (some-> x v/->value v/->viewer :name)]
+                                ^{:key (str idx "-" @!eval-counter)}
+                                [:div {:class (concat
+                                               [(when (:nextjournal/open-graph-image-capture (v/->value x))
+                                                  "open-graph-image-capture")]
+                                               (if viewer-css-class
+                                                 (cond-> viewer-css-class
+                                                   (string? viewer-css-class) vector)
+                                                 ["viewer"
+                                                  (when viewer-name (str "viewer-" (name viewer-name)))
+                                                  (when inner-viewer-name (str "viewer-" (name inner-viewer-name)))
+                                                  (case (or (v/width x)
+                                                            (case viewer-name
+                                                              (:code :code-folded) :wide
+                                                              :prose))
+                                                    :wide "w-full max-w-wide"
+                                                    :full "w-full"
+                                                    "w-full max-w-prose px-8")]))}
+                                 [v/inspect-presented x]]))
+                            xs))]]])))}))
+
+(clerk/add-viewers! [viewer])
+
 {::clerk/visibility {:code :fold :result :show}}
 
-(v/html
- [:<>
-  [:style {:type "text/css"}
-   "
+#_(v/html
+   [:<>
+    [:style {:type "text/css"}
+     "
 aside {
     width: 40%;
     padding-left: .5rem;
@@ -32,8 +105,10 @@ aside > p {
 
 p {
     font-family: 'Fira Sans', sans-serif;
+    color: black;
 }
 "]])
+
 
 ;; ◊page-name{Portal 🔮}
 
