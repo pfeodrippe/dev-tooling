@@ -107,9 +107,11 @@
                                    [v/inspect-presented slide]]]))
                              slides))])))})
 
+;; ----
+
 {::clerk/visibility {:result :show}}
 
 #_^{::clerk/viewer clerk.viewer/html}
 f
 
-;; |topic| ss ◊code{cssddoracosn}
+;; ◊link["http://google.com"]{eita}

@@ -129,6 +129,11 @@
                           :content (adapt-content opts v)}))
                  (adapt-content opts))})
 
+(defmethod prose->output [:md :note]
+  [opts & content]
+  {:type :aside
+   :content (adapt-content opts content)})
+
 ;; == Main
 (defn prose-parser
   "Called when a keyword tag is found.
@@ -356,11 +361,26 @@
                        (update :nextjournal/value (partial process-blocks viewers))
                        clerk.viewer/mark-presented))})
 
+(def aside-viewer
+  {:name :nextjournal.markdown/aside
+   :transform-fn (clerk.viewer/into-markup [:aside])})
+
+(defn update-child-viewers [f]
+  (fn [viewer]
+    (update viewer :transform-fn (fn [transform-fn]
+                                   (fn [wrapped-value]
+                                     (-> wrapped-value
+                                         transform-fn
+                                         (update :nextjournal/viewers f)))))))
+
 (def ^:private updated-viewers
   (clerk.viewer/update-viewers
    (clerk.viewer/get-default-viewers)
    {(comp #{:clerk/notebook} :name)
-    (constantly notebook-viewer)}))
+    (constantly notebook-viewer)
+
+    (comp #{:markdown} :name)
+    (update-child-viewers #(clerk.viewer/add-viewers % [aside-viewer]))}))
 
 (clerk.viewer/reset-viewers! :default updated-viewers)
 
