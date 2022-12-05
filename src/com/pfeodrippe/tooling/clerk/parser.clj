@@ -30,7 +30,8 @@
         ;; If it's a :plain, it means the it's some kind
         ;; of heading, we add the the current paragraph (if existent)
         ;; and then the plain element.
-        (contains? #{:plain} (:type el))
+        (or (contains? #{:plain} (:type el))
+            (:no-paragraph el))
         (if (seq (:content current-paragraph))
           (recur rest-list
                  (conj acc current-paragraph el)
@@ -179,7 +180,8 @@
   [opts & content]
   {:type :aside
    :content (-> (adapt-content opts content)
-                remove-hard-breaks)})
+                remove-hard-breaks)
+   :no-paragraph true})
 
 ;; == Main
 (defn prose-parser

@@ -57,11 +57,10 @@ aside {
     padding-left: .5rem;
     margin-left: -330px;
     float: left;
-    padding-top: 4px;
+    text-align: right;
 }
 
 aside > p {
-    margin: .5rem;
     color: #667;
     font-size: 1rem;
     font-family: PT Serif;
@@ -124,6 +123,8 @@ p {
 
 ;; ◊title{Malli Schemas 🕶️}
 
+;; ◊note{This is just some note, don't bother ◊link{https://google.com}{This is google}}
+
 ;; For any Malli schema that you find in Portal, you can generate some
 ;; samples for it, for this you use the exercise schema command, click
 ;; in one of the schemas in the Portal window below, open the commands panel
@@ -156,8 +157,8 @@ p {
                  :browse true})
 
   ;; TODO:
-  ;; - [ ] Divide text in multiple columns for asides
-  ;; - [ ] Make page title
+  ;; - [x] Divide text in multiple columns for asides
+  ;; - [ ] Build page title
   ;; - [ ] Improve external link visualization
   ;; - [ ] Add xref
   ;; - [ ] Make font resizable
