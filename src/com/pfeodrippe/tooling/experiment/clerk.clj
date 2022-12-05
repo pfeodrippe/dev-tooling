@@ -41,25 +41,53 @@
          (let [{:keys [md-toc]} @!state]
            (when-not (= md-toc toc)
              (swap! !state assoc :toc (render/toc-items (:children toc)) :md-toc toc :open? (not= :collapsed toc-visibility)))
-           [:div.flex
-            {:ref root-ref-fn}
+           [:div.flex {:ref root-ref-fn}
             [:div.fixed.top-2.left-2.md:left-auto.md:right-2.z-10
              [render/dark-mode-toggle !state]]
             #_(when (and toc toc-visibility)
-              [:<>
-               [navbar/toggle-button !state
                 [:<>
-                 [icon/menu {:size 20}]
-                 [:span.uppercase.tracking-wider.ml-1.font-bold
-                  {:class "text-[12px]"} "ToC"]]
-                {:class "z-10 fixed right-2 top-2 md:right-auto md:left-3 md:top-3 text-slate-400 font-sans text-xs hover:underline cursor-pointer flex items-center bg-white dark:bg-gray-900 py-1 px-3 md:p-0 rounded-full md:rounded-none border md:border-0 border-slate-200 dark:border-gray-500 shadow md:shadow-none dark:text-slate-400 dark:hover:text-white"}]
-               [navbar/panel !state [navbar/navbar !state]]])
-            [:div.flex-auto.h-screen.overflow-y-auto.scroll-container
+                 [navbar/toggle-button !state
+                  [:<>
+                   [icon/menu {:size 20}]
+                   [:span.uppercase.tracking-wider.ml-1.font-bold
+                    {:class "text-[12px]"} "ToC"]]
+                  {:class "z-10 fixed right-2 top-2 md:right-auto md:left-3 md:top-3 text-slate-400 font-sans text-xs hover:underline cursor-pointer flex items-center bg-white dark:bg-gray-900 py-1 px-3 md:p-0 rounded-full md:rounded-none border md:border-0 border-slate-200 dark:border-gray-500 shadow md:shadow-none dark:text-slate-400 dark:hover:text-white"}]
+                 [navbar/panel !state [navbar/navbar !state]]])
+
+            [:<>
+             [:style {:type "text/css"}
+              "
+aside {
+    width: 40%;
+    padding-left: .5rem;
+    margin-left: -330px;
+    float: left;
+    font-style: italic;
+    color: #667;
+    font-size: 1rem;
+    font-family: PT Serif;
+    padding-top: 4px;
+}
+
+aside > p {
+    margin: .5rem;
+}
+
+p {
+    font-family: 'Fira Sans', sans-serif;
+    color: black;
+    font-size: 1.1rem;
+}
+"]]
+
+            [:div.flex-auto.h-screen.overflow-y-auto.scroll-container.pl-72
              {:ref ref-fn}
              [:div {:class (or css-class "flex flex-col items-center viewer-notebook flex-auto")}
               (doall
                (map-indexed (fn [idx x]
                               (let [{viewer-name :name} (v/->viewer x)
+                                    ;; Somehow, `v/css-class` does not exist
+                                    ;; for SCI.
                                     viewer-css-class #_(v/css-class x) nil
                                     inner-viewer-name (some-> x v/->value v/->viewer :name)]
                                 ^{:key (str idx "-" @!eval-counter)}
@@ -86,35 +114,16 @@
 
 {::clerk/visibility {:code :fold :result :show}}
 
-#_(v/html
-   [:<>
-    [:style {:type "text/css"}
-     "
-aside {
-    width: 40%;
-    padding-left: .5rem;
-    margin-left: -330px;
-    float: left;
-    font-style: italic;
-    color: #29627e;
-}
-
-aside > p {
-    margin: .5rem;
-}
-
-p {
-    font-family: 'Fira Sans', sans-serif;
-    color: black;
-}
-"]])
-
+;; The paragraph mark (¶) is used when citing documents with sequentially numbered paragraphs (e.g., declarations or complaints). The section mark (§) is used when citing documents with numbered or lettered sections (e.g., statutes).
 
 ;; ◊page-name{Portal 🔮}
 
 ;; Let's learn what you can do with Portal.
 
 ;; ◊title{What's Portal?}
+
+#_^{:nextjournal.clerk/visibility {:code :show}}
+{:a 10 :f "asdjasdijfsodifjsodifjo" :c "dsfjasdfoijasdi" :d "fadsfjasiofjoiasdjfa" :e "fasdasdasd" :ff "asdasdasdsa"}
 
 ;; Take a look at ◊link[portal-url] for more
 ;; information, Portal has excellent guides.
@@ -147,5 +156,16 @@ p {
 (comment
 
   (clerk/serve! {:watch-paths ["src/com/pfeodrippe/tooling/experiment/"]})
+
+  (clerk/build! {:paths ["src/com/pfeodrippe/tooling/experiment/**"]
+                 :bundle true
+                 :browse true})
+
+  ;; TODO:
+  ;; - [ ] Divide text in multiple columns for asides
+  ;; - [ ] Make page title
+  ;; - [ ] Improve external link visualization
+  ;; - [ ] Add xref
+  ;; - [ ] Make font resizable
 
   ())
