@@ -8,6 +8,52 @@
    [clojure.string :as str]
    [clojure.walk :as walk]))
 
+(defn- remove-hard-breaks
+  [evaluated-result]
+  (loop [[el & rest-list] evaluated-result
+         acc []
+         current-paragraph {:type :paragraph
+                            :content []}]
+    (if el
+      (cond
+        ;; If it's a ::hard-break, remove it and add
+        ;; the current paragraph (if existent).
+        (= el ::hard-break)
+        (if (seq (:content current-paragraph))
+          (recur rest-list
+                 (conj acc current-paragraph)
+                 (assoc current-paragraph :content []))
+          (recur rest-list
+                 acc
+                 current-paragraph))
+
+        ;; If it's a :plain, it means the it's some kind
+        ;; of heading, we add the the current paragraph (if existent)
+        ;; and then the plain element.
+        (contains? #{:plain} (:type el))
+        (if (seq (:content current-paragraph))
+          (recur rest-list
+                 (conj acc current-paragraph el)
+                 (assoc current-paragraph :content []))
+          (recur rest-list
+                 (conj acc el)
+                 current-paragraph))
+
+        ;; Otherwise, the element is part of a paragraph.
+        :else
+        (recur rest-list
+               acc
+               (update current-paragraph :content conj el)))
+      ;; Convert any remaining ::hard-break
+      ;; into empty strings.
+      (walk/prewalk (fn [v]
+                      (if (vector? v)
+                        (vec (remove #{::hard-break} v))
+                        v))
+                    (if (seq (:content current-paragraph))
+                      (conj acc current-paragraph)
+                      acc)))))
+
 (defn adapt-content
   [_opts content]
   (mapv (fn [el]
@@ -129,10 +175,11 @@
                           :content (adapt-content opts v)}))
                  (adapt-content opts))})
 
-#_(defmethod prose->output [:md :note]
+(defmethod prose->output [:md :note]
   [opts & content]
   {:type :aside
-   :content (adapt-content opts content)})
+   :content (-> (adapt-content opts content)
+                remove-hard-breaks)})
 
 ;; == Main
 (defn prose-parser
@@ -237,52 +284,6 @@
                                       ;; paragraphs later.
                                       (str/replace #"\n\n" "◊:hard-break{}"))})))))
 
-(defn- remove-hard-breaks
-  [evaluated-result]
-  (loop [[el & rest-list] evaluated-result
-         acc []
-         current-paragraph {:type :paragraph
-                            :content []}]
-    (if el
-      (cond
-        ;; If it's a ::hard-break, remove it and add
-        ;; the current paragraph (if existent).
-        (= el ::hard-break)
-        (if (seq (:content current-paragraph))
-          (recur rest-list
-                 (conj acc current-paragraph)
-                 (assoc current-paragraph :content []))
-          (recur rest-list
-                 acc
-                 current-paragraph))
-
-        ;; If it's a :plain, it means the it's some kind
-        ;; of heading, we add the the current paragraph (if existent)
-        ;; and then the plain element.
-        (contains? #{:plain} (:type el))
-        (if (seq (:content current-paragraph))
-          (recur rest-list
-                 (conj acc current-paragraph el)
-                 (assoc current-paragraph :content []))
-          (recur rest-list
-                 (conj acc el)
-                 current-paragraph))
-
-        ;; Otherwise, the element is part of a paragraph.
-        :else
-        (recur rest-list
-               acc
-               (update current-paragraph :content conj el)))
-      ;; Convert any remaining ::hard-break
-      ;; into empty strings.
-      (walk/prewalk (fn [v]
-                      (if (vector? v)
-                        (vec (remove #{::hard-break} v))
-                        v))
-                    (if (seq (:content current-paragraph))
-                      (conj acc current-paragraph)
-                      acc)))))
-
 (defn blocks->markdown [{:as doc :keys [ns]}]
   (let [updated-doc
         (-> doc
@@ -344,52 +345,19 @@
         (assoc :toc toc)
         (cond-> ns (assoc :scope (clerk.viewer/datafy-scope ns))))))
 
-(def ^:private custom-css
-  [:<>
-   [:style {:type "text/css"}
-    "
-aside {
-    width: 40%;
-    padding-left: .5rem;
-    margin-left: -330px;
-    float: left;
-    font-style: italic;
-    color: #29627e;
-}
-
-aside > p {
-    margin: .5rem;
-}
-
-p {
-    font-family: 'Fira Sans', sans-serif;
-    color: black;
-}
-"]])
-
 (defn process-blocks [viewers doc]
   (let [updated-doc (blocks->markdown doc)]
-    (def bbb updated-doc)
-    (def aaa
-      (-> updated-doc
-          (update :blocks (partial into []
-                                   (comp (mapcat (partial clerk.viewer/with-block-viewer doc))
-                                         (map (comp clerk.viewer/process-wrapped-value
-                                                    clerk.viewer/apply-viewers*
-                                                    (partial clerk.viewer/ensure-wrapped-with-viewers viewers))))))
-          #_(update :blocks #(vec
-                              (concat
-                               [(clerk.viewer/mark-presented
-                                 (clerk.viewer/with-viewer {:name :html- :render-fn 'identity}
-                                   custom-css))]
-                               %)))))
-    aaa))
+    (-> updated-doc
+        (update :blocks (partial into []
+                                 (comp (mapcat (partial clerk.viewer/with-block-viewer doc))
+                                       (map (comp clerk.viewer/process-wrapped-value
+                                                  clerk.viewer/apply-viewers*
+                                                  (partial clerk.viewer/ensure-wrapped-with-viewers viewers)))))))))
 
 (def notebook-viewer
   {:name :clerk/notebook
    :render-fn 'nextjournal.clerk.render/render-notebook
    :transform-fn (fn [{:as wrapped-value :nextjournal/keys [viewers]}]
-                   (def wrapped-value wrapped-value)
                    (-> wrapped-value
                        (update :nextjournal/value (partial process-blocks viewers))
                        clerk.viewer/mark-presented))})

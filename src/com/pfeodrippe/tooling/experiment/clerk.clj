@@ -12,11 +12,6 @@
 (def portal-url
   "https://cljdoc.org/d/djblue/portal")
 
-(defmethod prose->output [:md :note]
-  [opts & content]
-  {:type :aside
-   :content (adapt-content opts content)})
-
 (def viewer
   (merge
    tool.parser/notebook-viewer
@@ -62,15 +57,14 @@ aside {
     padding-left: .5rem;
     margin-left: -330px;
     float: left;
-    font-style: italic;
-    color: #667;
-    font-size: 1rem;
-    font-family: PT Serif;
     padding-top: 4px;
 }
 
 aside > p {
     margin: .5rem;
+    color: #667;
+    font-size: 1rem;
+    font-family: PT Serif;
 }
 
 p {
