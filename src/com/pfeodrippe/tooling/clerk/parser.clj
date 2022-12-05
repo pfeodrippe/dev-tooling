@@ -364,10 +364,6 @@
                        (update :nextjournal/value (partial process-blocks viewers))
                        clerk.viewer/mark-presented))})
 
-(def aside-viewer
-  {:name :nextjournal.markdown/aside
-   :transform-fn (clerk.viewer/into-markup [:aside])})
-
 (defn update-child-viewers [f]
   (fn [viewer]
     (update viewer :transform-fn (fn [transform-fn]
@@ -376,6 +372,16 @@
                                          transform-fn
                                          (update :nextjournal/viewers f)))))))
 
+(def md-viewers
+  [{:name :nextjournal.markdown/aside
+    :transform-fn (clerk.viewer/into-markup [:aside])}
+   {:name :nextjournal.markdown/title-block
+    :transform-fn (clerk.viewer/into-markup [:title-block])}
+   {:name :nextjournal.markdown/topic
+    :transform-fn (clerk.viewer/into-markup [:topic])}
+   {:name :nextjournal.markdown/short-rule
+    :transform-fn (clerk.viewer/into-markup [:short-rule])}])
+
 (def ^:private updated-viewers
   (clerk.viewer/update-viewers
    (clerk.viewer/get-default-viewers)
@@ -383,7 +389,7 @@
     (constantly notebook-viewer)
 
     (comp #{:markdown} :name)
-    (update-child-viewers #(clerk.viewer/add-viewers % [aside-viewer]))}))
+    (update-child-viewers #(clerk.viewer/add-viewers % md-viewers))}))
 
 (clerk.viewer/reset-viewers! :default updated-viewers)
 

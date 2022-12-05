@@ -12,6 +12,24 @@
 (def portal-url
   "https://cljdoc.org/d/djblue/portal")
 
+(defmethod prose->output [:md :page-name]
+  [opts & content]
+  {:type :text
+   :text ""}
+  {:type :title-block
+   :content [{:type :topic
+              :text content
+              :no-paragraph true}
+             {:type :short-rule
+              :text "Olha asd asdf sdf jsdf oijsd foiajsd foiajsd foiasjd foiajsd ofiajs dfoiajsd foia"
+              :no-paragraph true}]
+   :no-paragraph true}
+  #_{:type :plain
+     :content [{:type :heading
+                :content (adapt-content opts content)
+                :heading-level 1}]
+     :toc [1 (adapt-content opts content)]})
+
 (def viewer
   (merge
    tool.parser/notebook-viewer
@@ -36,28 +54,18 @@
          (let [{:keys [md-toc]} @!state]
            (when-not (= md-toc toc)
              (swap! !state assoc :toc (render/toc-items (:children toc)) :md-toc toc :open? (not= :collapsed toc-visibility)))
-           [:div.flex {:ref root-ref-fn}
-            [:div.fixed.top-2.left-2.md:left-auto.md:right-2.z-10
-             [render/dark-mode-toggle !state]]
-            #_(when (and toc toc-visibility)
-                [:<>
-                 [navbar/toggle-button !state
-                  [:<>
-                   [icon/menu {:size 20}]
-                   [:span.uppercase.tracking-wider.ml-1.font-bold
-                    {:class "text-[12px]"} "ToC"]]
-                  {:class "z-10 fixed right-2 top-2 md:right-auto md:left-3 md:top-3 text-slate-400 font-sans text-xs hover:underline cursor-pointer flex items-center bg-white dark:bg-gray-900 py-1 px-3 md:p-0 rounded-full md:rounded-none border md:border-0 border-slate-200 dark:border-gray-500 shadow md:shadow-none dark:text-slate-400 dark:hover:text-white"}]
-                 [navbar/panel !state [navbar/navbar !state]]])
-
+           [:<>
             [:<>
              [:style {:type "text/css"}
               "
 aside {
-    width: 40%;
+    margin-bottom: 2em;
+    width: 12rem;
     padding-left: .5rem;
-    margin-left: -330px;
+    margin-left: -14rem;
     float: left;
     text-align: right;
+    position: absolute;
 }
 
 aside > p {
@@ -71,45 +79,95 @@ p {
     color: black;
     font-size: 1.1rem;
 }
-"]]
 
-            [:div.flex-auto.h-screen.overflow-y-auto.scroll-container.pl-72
-             {:ref ref-fn}
-             [:div {:class (or css-class "flex flex-col items-center viewer-notebook flex-auto")}
-              (doall
-               (map-indexed (fn [idx x]
-                              (let [{viewer-name :name} (v/->viewer x)
-                                    ;; Somehow, `v/css-class` does not exist
-                                    ;; for SCI.
-                                    viewer-css-class #_(v/css-class x) nil
-                                    inner-viewer-name (some-> x v/->value v/->viewer :name)]
-                                ^{:key (str idx "-" @!eval-counter)}
-                                [:div {:class (concat
-                                               [(when (:nextjournal/open-graph-image-capture (v/->value x))
-                                                  "open-graph-image-capture")]
-                                               (if viewer-css-class
-                                                 (cond-> viewer-css-class
-                                                   (string? viewer-css-class) vector)
-                                                 ["viewer"
-                                                  (when viewer-name (str "viewer-" (name viewer-name)))
-                                                  (when inner-viewer-name (str "viewer-" (name inner-viewer-name)))
-                                                  (case (or (v/width x)
-                                                            (case viewer-name
-                                                              (:code :code-folded) :wide
-                                                              :prose))
-                                                    :wide "w-full max-w-wide"
-                                                    :full "w-full"
-                                                    "w-full max-w-prose px-8")]))}
-                                 [v/inspect-presented x]]))
-                            xs))]]])))}))
+title-block {
+
+    position: absolute;
+    margin-bottom: 2em;
+    border-top: solid 3px #333;
+    padding-top: 5px;
+    width: 8rem;
+    padding-left: .5rem;
+    margin-left: -180px;
+    float: left;
+    text-align: right;
+
+    font-family: 'Fira Sans', sans-serif;
+    color: black;
+    font-size: 1.1rem;
+}
+
+title-block topic {
+    display:block;
+    font-family: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    font-size: 125%;
+    line-height: 1.10;
+    border-bottom: inherit;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-weight: bolder;
+    border-top: 0;
+    padding-top: 0;
+}
+
+short-rule {
+    display: block;
+    font-size: 100%;
+    line-height: 1.25;
+    font-style: italic;
+    hyphens: none;
+}
+"]]
+            [:div.flex {:ref root-ref-fn}
+             [:div.fixed.top-2.left-2.md:left-auto.md:right-2.z-10
+              [render/dark-mode-toggle !state]]
+             #_(when (and toc toc-visibility)
+                 [:<>
+                  [navbar/toggle-button !state
+                   [:<>
+                    [icon/menu {:size 20}]
+                    [:span.uppercase.tracking-wider.ml-1.font-bold
+                     {:class "text-[12px]"} "ToC"]]
+                   {:class "z-10 fixed right-2 top-2 md:right-auto md:left-3 md:top-3 text-slate-400 font-sans text-xs hover:underline cursor-pointer flex items-center bg-white dark:bg-gray-900 py-1 px-3 md:p-0 rounded-full md:rounded-none border md:border-0 border-slate-200 dark:border-gray-500 shadow md:shadow-none dark:text-slate-400 dark:hover:text-white"}]
+                  [navbar/panel !state [navbar/navbar !state]]])
+
+             [:div.flex-auto.h-screen.overflow-y-auto.scroll-container.pl-72.relative
+              {:ref ref-fn}
+              [:div {:class (or css-class "flex flex-col items-center viewer-notebook flex-auto")}
+               (doall
+                (map-indexed (fn [idx x]
+                               (let [{viewer-name :name} (v/->viewer x)
+                                     ;; Somehow, `v/css-class` does not exist
+                                     ;; for SCI.
+                                     viewer-css-class #_(v/css-class x) nil
+                                     inner-viewer-name (some-> x v/->value v/->viewer :name)]
+                                 ^{:key (str idx "-" @!eval-counter)}
+                                 [:div {:class (concat
+                                                [(when (:nextjournal/open-graph-image-capture (v/->value x))
+                                                   "open-graph-image-capture")]
+                                                (if viewer-css-class
+                                                  (cond-> viewer-css-class
+                                                    (string? viewer-css-class) vector)
+                                                  ["viewer"
+                                                   (when viewer-name (str "viewer-" (name viewer-name)))
+                                                   (when inner-viewer-name (str "viewer-" (name inner-viewer-name)))
+                                                   (case (or (v/width x)
+                                                             (case viewer-name
+                                                               (:code :code-folded) :wide
+                                                               :prose))
+                                                     :wide "w-full max-w-wide"
+                                                     :full "w-full"
+                                                     "w-full max-w-prose px-8")]))}
+                                  [v/inspect-presented x]]))
+                             xs))]]]])))}))
 
 (clerk/add-viewers! [viewer])
 
 {::clerk/visibility {:code :fold :result :show}}
 
-;; The paragraph mark (¶) is used when citing documents with sequentially numbered paragraphs (e.g., declarations or complaints). The section mark (§) is used when citing documents with numbered or lettered sections (e.g., statutes).
-
-;; ◊page-name{Portal 🔮}
+;; ◊page-name{portal}
 
 ;; Let's learn what you can do with Portal.
 
@@ -121,7 +179,7 @@ p {
 ;; Take a look at ◊link[portal-url] for more
 ;; information, Portal has excellent guides.
 
-;; ◊title{Malli Schemas 🕶️}
+;; ◊title{Malli Schemas}
 
 ;; ◊note{This is just some note, don't bother ◊link{https://google.com}{This is google}}
 
@@ -158,9 +216,12 @@ p {
 
   ;; TODO:
   ;; - [x] Divide text in multiple columns for asides
-  ;; - [ ] Build page title
-  ;; - [ ] Improve external link visualization
-  ;; - [ ] Add xref
-  ;; - [ ] Make font resizable
+  ;; - [ ] Page title
+  ;; - [ ] Subtitle
+  ;; - [ ] Improve external link UI
+  ;; - [ ] xref
+  ;; - [ ] Search
+  ;; - [ ] Index
+  ;; - [ ] Glossary
 
   ())
