@@ -1,7 +1,8 @@
 (ns com.pfeodrippe.tooling.openapi
   (:require
    [clojure.string :as str]
-   [clojure.java.shell :as sh])
+   [clojure.java.shell :as sh]
+   [markdown.core :as md])
   (:import
    (org.openapitools.openapidiff.core OpenApiCompare)
    (org.openapitools.openapidiff.core.output MarkdownRender)))
@@ -47,6 +48,7 @@
                              (when (seq md-str)
                                (str (format "## %s
 Commit: `%s`
+
 Commit time: `%s`
 \n\n"
                                             tag
@@ -56,7 +58,8 @@ Commit time: `%s`
                    (remove nil?))]
       (spit "diff.md"
             (->> mds
-                 (str/join "\n----------------------------------------------------------------\n"))))
+                 (str/join "\n----------------------------------------------------------------\n")))
+      (md/md-to-html "diff.md" "diff.html"))
     (finally
       (run-bash (format "git checkout %s" branch)))))
 
