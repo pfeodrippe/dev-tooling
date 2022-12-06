@@ -30,7 +30,7 @@
       (run-bash (format "git checkout %s" branch)))))
 
 (defn process-openapi-files
-  [{:keys [branch iterations]
+  [{:keys [branch iterations ref-openapi-json-file]
     :or {iterations 20}}]
   (try
     (run-bash (format "git checkout %s" branch))
@@ -55,9 +55,14 @@ Commit time: `%s`
                                             commit
                                             date)
                                     md-str)))))
-                   (remove nil?))]
+                   (remove nil?))
+          ref-diff (when ref-openapi-json-file
+                     (OpenApiCompare/fromContents
+                      (slurp (format "openapi-%s.json" 0))
+                      (slurp ref-openapi-json-file)))
+          ref-md (-> (MarkdownRender.) (.render ref-diff))]
       (spit "diff.md"
-            (->> mds
+            (->> (concat (when (seq ref-md) [ref-md]) mds)
                  (str/join "\n----------------------------------------------------------------\n")))
       (md/md-to-html "diff.md" "diff.html"))
     (finally
