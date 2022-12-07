@@ -456,6 +456,21 @@ short-rule {
     font-style: italic;
     hyphens: none;
 }
+
+a {
+    color: inherit !important;
+}
+
+a::after {
+    position: relative;
+    content: \"﻿°\";
+    margin-left: 0em;
+    font-size: 90%;
+    top: -0.1em;
+    color: rgb(153, 51, 51);
+    font-feature-settings: \"caps\";
+    font-variant-numeric: normal;
+}
 "]]
             [:div.flex {:ref root-ref-fn}
              [:div.fixed.top-2.left-2.md:left-auto.md:right-2.z-10

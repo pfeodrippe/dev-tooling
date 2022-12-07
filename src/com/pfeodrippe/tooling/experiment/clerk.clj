@@ -63,10 +63,12 @@
   ;; - [x] Divide text in multiple columns for asides
   ;; - [x] Page title
   ;; - [x] Subtitle
-  ;; - [ ] Improve external link UI
+  ;; - [x] Improve external link UI
   ;; - [ ] Internal link (xref)
   ;; - [ ] Search
   ;; - [ ] Index
   ;; - [ ] Glossary
+  ;; - [ ] Fix loading glitch
+  ;; - [ ] Make it work with Mobile
 
   ())
