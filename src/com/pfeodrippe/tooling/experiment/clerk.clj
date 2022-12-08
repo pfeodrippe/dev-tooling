@@ -10,11 +10,21 @@
 (def portal-url
   "https://cljdoc.org/d/djblue/portal")
 
+(defmethod prose->output [:md :xref]
+  [opts & content]
+  (def opts opts)
+  (def content content)
+  {:type :link
+   :content (adapt-content opts content)
+   :attrs {:href (str "/_ns/" (first content))}})
+
 {::clerk/visibility {:code :fold :result :show}}
 
 ;; ◊page-name[{:subtitle "Getting started with Portal"}]{portal}
 
 ;; Let's learn what you can do with Portal.
+
+;; Look at ◊xref{com.pfeodrippe.tooling.experiment.test1}
 
 ;; ◊title{What's Portal?}
 
@@ -65,6 +75,8 @@
   ;; - [x] Subtitle
   ;; - [x] Improve external link UI
   ;; - [ ] Internal link (xref)
+  ;;   - [x] Go back to last page
+  ;;   - [ ] Make it work with static app
   ;; - [ ] Search
   ;; - [ ] Index
   ;; - [ ] Glossary

@@ -6,7 +6,12 @@
    [fr.jeremyschoffen.prose.alpha.reader.core :as reader]
    [fr.jeremyschoffen.prose.alpha.eval.common :as eval-common]
    [clojure.string :as str]
-   [clojure.walk :as walk]))
+   [clojure.walk :as walk]
+   [nextjournal.clerk.webserver :as clerk.webserver]
+   [org.httpkit.server :as httpkit]
+   [clojure.pprint :as pp]
+   [nextjournal.clerk :as clerk]
+   [nextjournal.clerk.view :as clerk.view]))
 
 (defn- remove-hard-breaks
   [evaluated-result]
@@ -136,7 +141,8 @@
                                   content
                                   (drop 1 content)))
    :attrs {:href (first content)
-           :target "_blank"}})
+           :target "_blank"
+           :external_link "true"}})
 
 (defmethod prose->output [:md :command]
   [opts & content]
@@ -457,11 +463,11 @@ short-rule {
     hyphens: none;
 }
 
-a {
+a[external_link] {
     color: inherit !important;
 }
 
-a::after {
+a[external_link]::after {
     position: relative;
     content: \"﻿°\";
     margin-left: 0em;
@@ -543,6 +549,30 @@ a::after {
     (update-child-viewers #(clerk.viewer/add-viewers % md-viewers))}))
 
 (clerk.viewer/reset-viewers! :default updated-viewers)
+
+(defn- app
+  [{:as req :keys [uri]}]
+  (if (:websocket? req)
+    (httpkit/as-channel req clerk.webserver/ws-handlers)
+    (try
+      (case (get (re-matches #"/([^/]*).*" uri) 1)
+        "_ping" {:status 200 :body "ok"}
+        "_blob" (clerk.webserver/serve-blob @clerk.webserver/!doc (clerk.webserver/extract-blob-opts req))
+        ("build" "js") (clerk.webserver/serve-file "public" req)
+        "_ws" {:status 200 :body "upgrading..."}
+        {:status  200
+         :headers {"Content-Type" "text/html"}
+         :body    (do (when-let [ns* (some-> (get (re-matches #"/_ns/([^/]*).*" uri) 1)
+                                             symbol
+                                             find-ns)]
+                        ;; We added this so we can recognize a namespace in the uri
+                        ;; and move there.
+                        (clerk/show! ns*))
+                      (clerk.view/doc->html @clerk.webserver/!doc @clerk.webserver/!error))})
+      (catch Throwable e
+        {:status  500
+         :body    (with-out-str (pp/pprint (Throwable->map e)))}))))
+(alter-var-root #'clerk.webserver/app (constantly app))
 
 ;; TODO:
 ;; - [x] Return sexp if function inexistent
