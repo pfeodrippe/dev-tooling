@@ -1,83 +1,74 @@
+^{:nextjournal.clerk/visibility {:code :hide}}
 (ns com.pfeodrippe.tooling.experiment.test1
-  {:nextjournal.clerk/no-cache true
-   :nextjournal.clerk/visibility {:code :hide :result :hide}}
+  #_{:nextjournal.clerk/no-cache true}
   (:require
    [nextjournal.clerk :as clerk]
-   [nextjournal.clerk.viewer :as v]
-   [com.pfeodrippe.tooling.clerk.parser :as tool.clerk.parser]))
+   [com.pfeodrippe.tooling.clerk.parser :as tool.parser :refer [prose->output adapt-content]]))
 
-(def title "My title")
-(def topic "My topic")
+{::clerk/visibility {:code :hide :result :hide}}
 
-{:nextjournal.clerk/visibility {:result :show}}
+(def portal-url
+  "https://cljdoc.org/d/djblue/portal")
 
-#_(v/html
- [:<>
-  [:style {:type "text/css"}
-   "
-aside {
-    width: 40%;
-    padding-left: .5rem;
-    margin-left: .5rem;
-    float: right;
-    box-shadow: inset 5px 0 5px -5px #29627e;
-    font-style: italic;
-    color: #29627e;
-}
+{::clerk/visibility {:code :fold :result :show}}
 
-aside > p {
-    margin: .5rem;
-}
+;; ◊page-name[{:subtitle "Getting started with Portal"}]{test 1}
 
-p {
-    font-family: 'Fira Sans', sans-serif;
-}
-"]])
+;; Let's learn what you can do with Portal.
 
-#_(v/html
-   [:<>
-    [:style {:type "text/css"}
-     "
-aside {
-    width: 40%;
-    padding-left: .5rem;
-    margin-left: .5rem;
-    float: right;
-    box-shadow: inset 5px 0 5px -5px #29627e;
-    font-style: italic;
-    color: #29627e;
-}
+;; ◊title{What's Portal?}
 
-aside > p {
-    margin: .5rem;
-}
+#_^{:nextjournal.clerk/visibility {:code :show}}
+{:a 10 :f "asdjasdijfsodifjsodifjo" :c "dsfjasdfoijasdi" :d "fadsfjasiofjoiasdjfa" :e "fasdasdasd" :ff "asdasdasdsa"}
 
-p {
-    font-family: 'Fira Sans', sans-serif;
-}
-"]])
+;; Take a look at ◊link[portal-url] for more
+;; information, Portal has excellent guides.
 
-#_(clerk/with-viewer v/html
-  "<!DOCTYPE html>
-<html>
-<head>
-    <link rel=\"stylesheet\" href=\"https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css\" />
-</head>
-<body>
-    <div class=\"grid grid-cols-2 gap-4\">
-        <div class=\"col-span-1 font-italic\">
-            Callout 1: asdifj asoidfj asdoif jasdo fasdio fjsaiod fjoisad jfoiasdj fioasdj fiojasdoi fjaosid fjaiosdf j
-        </div>
-        <p class=\"col-span-1\">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-        <div class=\"col-span-1 font-italic\">
-            Callout 2:
-        </div>
-        <p class=\"col-span-1\">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-    </div>
-</body>
-</html>
-")
+;; ◊title{Malli Schemas}
+
+;; ◊note{This is just some note, don't bother ◊link{https://google.com}{This is google}}
+
+;; For any Malli schema that you find in Portal, you can generate some
+;; samples for it, for this you use the exercise schema command, click
+;; in one of the schemas in the Portal window below, open the commands panel
+;; by pressing ◊command{CMD + SHIFT + p} or by clicking at ◊em{>_} in the bottom
+;; right and type ◊em{exercise}.
+
+;; ◊note{This is just some note, don't bother ◊link{https://google.com}{This is google}}
+
+;; You will see a map with ◊code{:malli/generated} as the key and the
+;; various samples on the right. If you double click (or press
+;; ◊command{ENTER}) on ◊code{:malli/generated}, you will see that you are able to
+;; generate even more samples, this is a easy way to visualize ◊strong{any}
+;; schema you meet in Portal, from any source.
+
+;; So what?
+
+;; asdf asdfasdf
+
+;; asdf jasdiof jaoisdf jaoids jfaoisd jaosf jaoisdf jaos ijaoi djaoi sdjfas
+;; asd fjaoisd jaosd
+
+{::clerk/visibility {:code :hide :result :hide}}
+
+(comment
+
+  (clerk/serve! {:watch-paths ["src/com/pfeodrippe/tooling/experiment/"]})
+
+  (clerk/build! {:paths ["src/com/pfeodrippe/tooling/experiment/**"]
+                 :bundle true
+                 :browse true})
+
+  ;; TODO:
+  ;; - [x] Divide text in multiple columns for asides
+  ;; - [x] Page title
+  ;; - [x] Subtitle
+  ;; - [x] Improve external link UI
+  ;; - [ ] Internal link (xref)
+  ;; - [ ] Search
+  ;; - [ ] Index
+  ;; - [ ] Glossary
+  ;; - [ ] Fix loading glitch
+  ;; - [ ] Make it work with Mobile
+
+  ())

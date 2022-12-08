@@ -390,9 +390,9 @@
              (swap! !state assoc :toc (render/toc-items (:children toc)) :md-toc toc :open? (not= :collapsed toc-visibility)))
            [:<>
             [:<>
-             [:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
-                     :rel "stylesheet"
-                     :type "text/css"}]
+             #_[:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
+                       :rel "stylesheet"
+                       :type "text/css"}]
              [:style {:type "text/css"}
               "
 aside {
