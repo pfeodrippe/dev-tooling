@@ -136,6 +136,10 @@
               :heading-level 3}]
    :toc [3 (adapt-content opts content)]})
 
+(def ^:private link-classes
+  [:hover:bg-orange-100 :hover:rounded :hover:no-underline
+   :transition :duration-200 :ease-in :ease-out])
+
 (defmethod prose->output [:md :link]
   [opts & content]
   {:type :link
@@ -144,7 +148,8 @@
                                   (drop 1 content)))
    :attrs {:href (first content)
            :target "_blank"
-           :external_link "true"}})
+           :external_link "true"
+           :class link-classes}})
 
 (defmethod prose->output [:md :xref]
   [opts & content]
@@ -155,10 +160,14 @@
             (throw (ex-info "XRef does not exist" {:xref ref})))
           {:type :link
            :content (adapt-content opts content)
-           :attrs {:href (str "#/" (clerk.analyzer/ns->file ref))}})
+           :attrs {:href (str "#/" (clerk.analyzer/ns->file ref))
+                   :internal_link "true"
+                   :class link-classes}})
       {:type :link
        :content (adapt-content opts content)
-       :attrs {:href (str "/_ns/" ref)}})))
+       :attrs {:href (str "/_ns/" ref)
+               :internal_link "true"
+               :class link-classes}})))
 
 (defmethod prose->output [:md :command]
   [opts & content]
@@ -493,6 +502,16 @@ a[external_link]::after {
     font-feature-settings: \"caps\";
     font-variant-numeric: normal;
 }
+
+a[internal_link] {
+    color: inherit !important;
+    // font-variant-caps: all-small-caps;
+    // font-family: PT Serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 17px;
+}
+
 "]]
             [:div.flex {:ref root-ref-fn}
              [:div.fixed.top-2.left-2.md:left-auto.md:right-2.z-10

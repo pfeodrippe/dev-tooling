@@ -16,7 +16,8 @@
 
 ;; Let's learn what you can do with Portal.
 
-;; Look at ◊xref{com.pfeodrippe.tooling.experiment.test1}
+;; Look at ◊xref{com.pfeodrippe.tooling.experiment.test1} and tell me that
+;; you are not happy! Please.
 
 ;; ◊title{What's Portal?}
 
@@ -69,7 +70,7 @@
   ;; - [ ] Internal link (xref)
   ;;   - [x] Go back to last page
   ;;   - [x] Static build
-  ;;   - [ ] Uppercase
+  ;;   - [x] Uppercase
   ;;   - [ ] Can refer to a ns using keyword as well (ns metadata or maybe a EDN
   ;;         file or even another ns that contains the mapping)?
   ;; - [ ] Search
@@ -80,6 +81,6 @@
   ;; - [ ] Make scroll remember its position when clicking back or when
   ;;       reloading the same page
   ;; - [ ] Remove `Generated with Clerk` from the static build
-  ;; - [ ] Change ns automatically in the url when the user shows some ns
+  ;; - [ ] Change ns automatically in the url when the user goes to another ns
 
   ())
