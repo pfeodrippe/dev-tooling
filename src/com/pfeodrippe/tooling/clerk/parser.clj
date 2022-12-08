@@ -11,7 +11,9 @@
    [org.httpkit.server :as httpkit]
    [clojure.pprint :as pp]
    [nextjournal.clerk :as clerk]
-   [nextjournal.clerk.view :as clerk.view]))
+   [nextjournal.clerk.view :as clerk.view]
+   [nextjournal.clerk.analyzer :as clerk.analyzer]
+   [nextjournal.clerk.builder :as clerk.builder]))
 
 (defn- remove-hard-breaks
   [evaluated-result]
@@ -143,6 +145,20 @@
    :attrs {:href (first content)
            :target "_blank"
            :external_link "true"}})
+
+(defmethod prose->output [:md :xref]
+  [opts & content]
+  (let [ref (first content)]
+    (if clerk.builder/*build*
+      ;; Static build.
+      (do (when-not (clerk.analyzer/ns->file ref)
+            (throw (ex-info "XRef does not exist" {:xref ref})))
+          {:type :link
+           :content (adapt-content opts content)
+           :attrs {:href (str "#/" (clerk.analyzer/ns->file ref))}})
+      {:type :link
+       :content (adapt-content opts content)
+       :attrs {:href (str "/_ns/" ref)}})))
 
 (defmethod prose->output [:md :command]
   [opts & content]
@@ -562,13 +578,14 @@ a[external_link]::after {
         "_ws" {:status 200 :body "upgrading..."}
         {:status  200
          :headers {"Content-Type" "text/html"}
-         :body    (do (when-let [ns* (some-> (get (re-matches #"/_ns/([^/]*).*" uri) 1)
-                                             symbol
-                                             find-ns)]
-                        ;; We added this so we can recognize a namespace in the uri
-                        ;; and move there.
-                        (clerk/show! ns*))
-                      (clerk.view/doc->html @clerk.webserver/!doc @clerk.webserver/!error))})
+         :body    (do (when-let [ns-maybe (some-> (get (re-matches #"/_ns/([^/]*).*" uri) 1)
+                                                  symbol)]
+                        (when-let [ns* (and (try (require ns-maybe) "" (catch Exception _))
+                                            (find-ns ns-maybe))]
+                          ;; We added this so we can recognize a namespace in the uri
+                          ;; and move there.
+                          (clerk/show! ns*)))
+                    (clerk.view/doc->html @clerk.webserver/!doc @clerk.webserver/!error))})
       (catch Throwable e
         {:status  500
          :body    (with-out-str (pp/pprint (Throwable->map e)))}))))

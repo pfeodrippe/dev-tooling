@@ -1,6 +1,6 @@
 ^{:nextjournal.clerk/visibility {:code :hide}}
 (ns com.pfeodrippe.tooling.experiment.clerk
-  #_{:nextjournal.clerk/no-cache true}
+  {:nextjournal.clerk/no-cache true}
   (:require
    [nextjournal.clerk :as clerk]
    [com.pfeodrippe.tooling.clerk.parser :as tool.parser :refer [prose->output adapt-content]]))
@@ -9,14 +9,6 @@
 
 (def portal-url
   "https://cljdoc.org/d/djblue/portal")
-
-(defmethod prose->output [:md :xref]
-  [opts & content]
-  (def opts opts)
-  (def content content)
-  {:type :link
-   :content (adapt-content opts content)
-   :attrs {:href (str "/_ns/" (first content))}})
 
 {::clerk/visibility {:code :fold :result :show}}
 
@@ -76,11 +68,18 @@
   ;; - [x] Improve external link UI
   ;; - [ ] Internal link (xref)
   ;;   - [x] Go back to last page
-  ;;   - [ ] Make it work with static app
+  ;;   - [x] Static build
+  ;;   - [ ] Uppercase
+  ;;   - [ ] Can refer to a ns using keyword as well (ns metadata or maybe a EDN
+  ;;         file or even another ns that contains the mapping)?
   ;; - [ ] Search
   ;; - [ ] Index
   ;; - [ ] Glossary
   ;; - [ ] Fix loading glitch
   ;; - [ ] Make it work with Mobile
+  ;; - [ ] Make scroll remember its position when clicking back or when
+  ;;       reloading the same page
+  ;; - [ ] Remove `Generated with Clerk` from the static build
+  ;; - [ ] Change ns automatically in the url when the user shows some ns
 
   ())
