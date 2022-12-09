@@ -77,6 +77,7 @@
   ;;   - [x] Can refer to a ns using keyword as well (ns metadata or maybe a EDN
   ;;         file or even another ns that contains the mapping)?
   ;; - [x] Fix absolute path issue
+  ;; - [x] Redirect
   ;; - [ ] Change ns automatically in the url when the user goes to another ns
   ;; - [ ] Search
   ;; - [ ] Index

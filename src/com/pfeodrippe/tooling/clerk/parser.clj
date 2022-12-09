@@ -453,9 +453,15 @@
              (swap! !state assoc :toc (render/toc-items (:children toc)) :md-toc toc :open? (not= :collapsed toc-visibility)))
            [:<>
             [:<>
-             #_[:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
-                       :rel "stylesheet"
-                       :type "text/css"}]
+             [:script
+              "/* If browser back button was used, flush cache */
+(function () {
+	window.onpageshow = function(event) {
+		if (event.persisted) {
+			window.location.reload();
+		}
+	};
+})();"]
              [:style {:type "text/css"}
               "
 aside {
@@ -627,16 +633,24 @@ a[internal_link] {
         "_blob" (clerk.webserver/serve-blob @clerk.webserver/!doc (clerk.webserver/extract-blob-opts req))
         ("build" "js") (clerk.webserver/serve-file "public" req)
         "_ws" {:status 200 :body "upgrading..."}
-        {:status  200
-         :headers {"Content-Type" "text/html"}
-         :body    (do (when-let [ns-maybe (some-> (get (re-matches #"/_ns/([^/]*).*" uri) 1)
-                                                  symbol)]
-                        (when-let [ns* (and (try (require ns-maybe) "" (catch Exception _))
-                                            (find-ns ns-maybe))]
-                          ;; We added this so we can recognize a namespace in the uri
-                          ;; and move there.
-                          (clerk/show! ns*)))
-                    (clerk.view/doc->html @clerk.webserver/!doc @clerk.webserver/!error))})
+
+        (or (when-let [ns-maybe (some-> (get (re-matches #"/_ns/([^/]*).*" uri) 1)
+                                        symbol)]
+              (when-let [ns* (and (try (require ns-maybe) "" (catch Exception _))
+                                  (find-ns ns-maybe))]
+                ;; We added this so we can recognize a namespace in the uri
+                ;; and move there.
+                (when (not= (str "/_ns/" (:ns @clerk.webserver/!doc))
+                            uri)
+                  (clerk/show! ns*))
+                {:status  200
+                 :headers {"Content-Type" "text/html"
+                           "Cache-Control" "no-cache, no-store, must-revalidate"
+                           "Pragma" "no-cache"
+                           "Expires" "0"}
+                 :body    (clerk.view/doc->html @clerk.webserver/!doc @clerk.webserver/!error)}))
+            {:status 301
+             :headers {"Location" (str "/_ns/" (:ns @clerk.webserver/!doc))}}))
       (catch Throwable e
         {:status  500
          :body    (with-out-str (pp/pprint (Throwable->map e)))}))))
@@ -667,17 +681,3 @@ a[internal_link] {
 ;; - [ ] Create a helper function to call tags as functions
 ;; - [ ] Create a tag that receives a html output and render it
 ;;   - [ ] So it can be used for parsing tag calls from code
-
-(comment
-
-  (md/parse "## Example\nlook")
-
-  (nextjournal.clerk.parser/parse-markdown-string {:doc? true} "## Aaa
-- s
-### Eee")
-
-  (md/parse "## Aaa
-- s
-### Eee")
-
-  ())
