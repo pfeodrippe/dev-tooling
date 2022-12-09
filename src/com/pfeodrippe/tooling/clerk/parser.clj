@@ -175,14 +175,26 @@
         location-name (or (:clerk/name (meta ns*))
                           xref)]
     (if clerk.builder/*build*
-      ;; Static build.
-      (do (when-not (clerk.analyzer/ns->file xref)
-            (throw (ex-info "XRef does not exist" {:xref xref})))
-          {:type :link
-           :content (adapt-content opts [location-name])
-           :attrs {:href (str "#/" (clerk.analyzer/ns->file xref))
-                   :internal_link "true"
-                   :class link-classes}})
+      (let [file-path (clerk.analyzer/ns->file xref)
+            expanded-paths (->> (nextjournal.clerk.builder/process-build-opts
+                                 (assoc clerk.builder/*build*
+                                        :expand-paths? true))
+                                :expanded-paths
+                                set)
+            ;; `ns->file` may return the absolute file, so we use the
+            ;; expanded paths from Clerk instead so the notebooks internal links
+            ;; work.
+            path-matched (->> expanded-paths
+                              (filter #(str/ends-with? file-path %))
+                              first)]
+        ;; Static build.
+        (when-not path-matched
+          (throw (ex-info "XRef does not exist" {:xref xref})))
+        {:type :link
+         :content (adapt-content opts [location-name])
+         :attrs {:href (str "#/" path-matched)
+                 :internal_link "true"
+                 :class link-classes}})
       {:type :link
        :content (adapt-content opts [location-name])
        :attrs {:href (str "/_ns/" xref)

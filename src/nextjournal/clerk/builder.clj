@@ -278,7 +278,7 @@
 (def ^:dynamic *build* nil)
 
 (defn build-static-app! [{:as opts :keys [bundle?]}]
-  (binding [*build* true]
+  (binding [*build* opts]
     (let [{:as opts :keys [download-cache-fn upload-cache-fn report-fn compile-css? expanded-paths error]}
           (try (process-build-opts (assoc opts :expand-paths? true))
                (catch Exception e
