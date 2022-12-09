@@ -1,6 +1,6 @@
 ^{:nextjournal.clerk/visibility {:code :hide}}
 (ns com.pfeodrippe.tooling.experiment.test1
-  #_{:nextjournal.clerk/no-cache true}
+  {:clerk/name "test 1"}
   (:require
    [nextjournal.clerk :as clerk]
    [com.pfeodrippe.tooling.clerk.parser :as tool.parser :refer [prose->output adapt-content]]))

@@ -3,7 +3,8 @@
   {:nextjournal.clerk/no-cache true}
   (:require
    [nextjournal.clerk :as clerk]
-   [com.pfeodrippe.tooling.clerk.parser :as tool.parser :refer [prose->output adapt-content]]))
+   [com.pfeodrippe.tooling.clerk.parser :as tool.parser :refer [prose->output adapt-content]]
+   com.pfeodrippe.tooling.experiment.path))
 
 {::clerk/visibility {:code :hide :result :hide}}
 
@@ -52,6 +53,8 @@
 ;; asdf jasdiof jaoisdf jaoids jfaoisd jaosf jaoisdf jaos ijaoi djaoi sdjfas
 ;; asd fjaoisd jaosd
 
+;; ◊xref{:doc/test-1}
+
 {::clerk/visibility {:code :hide :result :hide}}
 
 (comment
@@ -67,20 +70,23 @@
   ;; - [x] Page title
   ;; - [x] Subtitle
   ;; - [x] Improve external link UI
-  ;; - [ ] Internal link (xref)
+  ;; - [x] Internal link (xref)
   ;;   - [x] Go back to last page
   ;;   - [x] Static build
   ;;   - [x] Uppercase
-  ;;   - [ ] Can refer to a ns using keyword as well (ns metadata or maybe a EDN
+  ;;   - [x] Can refer to a ns using keyword as well (ns metadata or maybe a EDN
   ;;         file or even another ns that contains the mapping)?
   ;; - [ ] Search
   ;; - [ ] Index
   ;; - [ ] Glossary
-  ;; - [ ] Fix loading glitch
+  ;; - [ ] In the JVM, show background in red for a link if it does not exist
+  ;; - [x] Fix loading glitch
   ;; - [ ] Make it work with Mobile
   ;; - [ ] Make scroll remember its position when clicking back or when
   ;;       reloading the same page
   ;; - [ ] Remove `Generated with Clerk` from the static build
+  ;; - [ ] Breadcrumb
   ;; - [ ] Change ns automatically in the url when the user goes to another ns
+  ;; - [ ] For xref, refer to an marker in a file
 
   ())

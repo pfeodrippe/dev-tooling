@@ -151,21 +151,41 @@
            :external_link "true"
            :class link-classes}})
 
+(defonce *state
+  (atom {:path-info {}}))
+
+(defn add-path-info!
+  "Receives a map "
+  [m]
+  (swap! *state update :path-info merge m))
+
+(defn- require-find-ns
+  [ns*]
+  (and (try (require ns*) "" (catch Exception _))
+       (find-ns ns*)))
+
 (defmethod prose->output [:md :xref]
   [opts & content]
-  (let [ref (first content)]
+  (let [path (read-string (first content))
+        {:keys [xref ns*]} (if (keyword? path)
+                             {:xref (some-> (get-in @*state [:path-info path]) str)
+                              :ns* (require-find-ns (get-in @*state [:path-info path]))}
+                             {:xref (str path)
+                              :ns* (require-find-ns path)})
+        location-name (or (:clerk/name (meta ns*))
+                          xref)]
     (if clerk.builder/*build*
       ;; Static build.
-      (do (when-not (clerk.analyzer/ns->file ref)
-            (throw (ex-info "XRef does not exist" {:xref ref})))
+      (do (when-not (clerk.analyzer/ns->file xref)
+            (throw (ex-info "XRef does not exist" {:xref xref})))
           {:type :link
-           :content (adapt-content opts content)
-           :attrs {:href (str "#/" (clerk.analyzer/ns->file ref))
+           :content (adapt-content opts [location-name])
+           :attrs {:href (str "#/" (clerk.analyzer/ns->file xref))
                    :internal_link "true"
                    :class link-classes}})
       {:type :link
-       :content (adapt-content opts content)
-       :attrs {:href (str "/_ns/" ref)
+       :content (adapt-content opts [location-name])
+       :attrs {:href (str "/_ns/" xref)
                :internal_link "true"
                :class link-classes}})))
 
