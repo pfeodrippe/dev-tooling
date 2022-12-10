@@ -79,8 +79,9 @@
   ;; - [x] Fix absolute path issue
   ;; - [x] Redirect
   ;; - [-] Change ns automatically in the url when the user goes to another ns
-  ;; - [ ] Search
   ;; - [ ] Index
+  ;; - [ ] Navigation (bottom bar)
+  ;; - [ ] Search
   ;; - [ ] Glossary
   ;; - [ ] In the JVM, show background in red for a link if it does not exist
   ;; - [x] Fix loading glitch

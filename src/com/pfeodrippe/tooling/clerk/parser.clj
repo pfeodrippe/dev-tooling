@@ -649,8 +649,11 @@ a[internal_link] {
                            "Pragma" "no-cache"
                            "Expires" "0"}
                  :body    (clerk.view/doc->html @clerk.webserver/!doc @clerk.webserver/!error)}))
-            {:status 302
-             :headers {"Location" (str "/_ns/" (:ns @clerk.webserver/!doc))}}))
+            (if-let [ns* (:ns @clerk.webserver/!doc)]
+              {:status 302
+               :headers {"Location" (str "/_ns/" ns*)}}
+              {:status 200
+               :body   (clerk.view/doc->html clerk.webserver/help-doc @clerk.webserver/!error)})))
       (catch Throwable e
         {:status  500
          :body    (with-out-str (pp/pprint (Throwable->map e)))}))))
