@@ -649,7 +649,7 @@ a[internal_link] {
                            "Pragma" "no-cache"
                            "Expires" "0"}
                  :body    (clerk.view/doc->html @clerk.webserver/!doc @clerk.webserver/!error)}))
-            {:status 301
+            {:status 302
              :headers {"Location" (str "/_ns/" (:ns @clerk.webserver/!doc))}}))
       (catch Throwable e
         {:status  500

@@ -53,9 +53,15 @@
    [:head
     [:meta {:charset "UTF-8"}]
     [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
+
+    ;; For preventing favicon requests.
+    [:link {:rel :icon :href "data:,"}]
+
+    ;; Add some fonts.
     [:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
             :rel "stylesheet"
             :type "text/css"}]
+
     (include-css+js state)]
    [:body.dark:bg-gray-900
     [:div#clerk]
@@ -75,9 +81,15 @@ window.ws_send = msg => ws.send(msg)")]]))
     [:title (or (and current-path (-> state :path->doc (get current-path) v/->value :title)) "Clerk")]
     [:meta {:charset "UTF-8"}]
     [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
+
+    ;; For preventing favicon requests.
+    [:link {:rel :icon :href "data:,"}]
+
+    ;; Add some fonts.
     [:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
             :rel "stylesheet"
             :type "text/css"}]
+
     (when current-path (v/open-graph-metas (-> state :path->doc (get current-path) v/->value :open-graph)))
     (include-css+js state)]
    [:body

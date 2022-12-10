@@ -78,7 +78,7 @@
   ;;         file or even another ns that contains the mapping)?
   ;; - [x] Fix absolute path issue
   ;; - [x] Redirect
-  ;; - [ ] Change ns automatically in the url when the user goes to another ns
+  ;; - [-] Change ns automatically in the url when the user goes to another ns
   ;; - [ ] Search
   ;; - [ ] Index
   ;; - [ ] Glossary
