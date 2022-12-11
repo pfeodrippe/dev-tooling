@@ -78,8 +78,14 @@
   ;;         file or even another ns that contains the mapping)?
   ;; - [x] Fix absolute path issue
   ;; - [x] Redirect
-  ;; - [-] Change ns automatically in the url when the user goes to another ns
+  ;; - [-] Change ns automatically in the url when the user goes to another ns.
+  ;;       Not for now
+  ;; - [x] Show red for a xref that doesn't exist
   ;; - [ ] Index
+  ;;   - [ ] Section
+  ;;   - [ ] Section page
+  ;;     - [ ] Children
+  ;;   - [ ] List of pages inside a section
   ;; - [ ] Navigation (bottom bar)
   ;; - [ ] Search
   ;; - [ ] Glossary
@@ -91,5 +97,7 @@
   ;; - [ ] Remove `Generated with Clerk` from the static build
   ;; - [ ] Breadcrumb
   ;; - [ ] For xref, refer to an marker in a file
+  ;; - [ ] PDF version?
+  ;; - [ ] Ebook version?
 
   ())

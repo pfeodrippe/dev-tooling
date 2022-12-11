@@ -172,8 +172,10 @@
                               :ns* (require-find-ns (get-in @*state [:path-info path]))}
                              {:xref (str path)
                               :ns* (require-find-ns path)})
-        location-name (or (:clerk/name (meta ns*))
-                          xref)]
+        location-name (if ns*
+                        (or (:clerk/name (meta ns*))
+                            xref)
+                        (str path))]
     (if clerk.builder/*build*
       (let [file-path (clerk.analyzer/ns->file xref)
             expanded-paths (->> (nextjournal.clerk.builder/process-build-opts
@@ -199,7 +201,8 @@
        :content (adapt-content opts [location-name])
        :attrs {:href (str "/_ns/" xref)
                :internal_link "true"
-               :class link-classes}})))
+               :class (cond-> link-classes
+                        (nil? ns*) (conj :bg-red-300))}})))
 
 (defmethod prose->output [:md :command]
   [opts & content]
@@ -453,15 +456,6 @@
              (swap! !state assoc :toc (render/toc-items (:children toc)) :md-toc toc :open? (not= :collapsed toc-visibility)))
            [:<>
             [:<>
-             [:script
-              "/* If browser back button was used, flush cache */
-(function () {
-	window.onpageshow = function(event) {
-		if (event.persisted) {
-			window.location.reload();
-		}
-	};
-})();"]
              [:style {:type "text/css"}
               "
 aside {
