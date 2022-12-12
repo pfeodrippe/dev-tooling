@@ -82,10 +82,10 @@
   ;;       Not for now
   ;; - [x] Show red for a xref that doesn't exist
   ;; - [ ] Index
-  ;;   - [ ] Section
-  ;;   - [ ] Section page
+  ;;   - [ ] Section header
   ;;     - [ ] Children
-  ;;   - [ ] List of pages inside a section
+  ;;   - [ ] Section page (for the future)
+  ;; - [ ] Add path in only one place?
   ;; - [ ] Navigation (bottom bar)
   ;; - [ ] Search
   ;; - [ ] Glossary
@@ -99,5 +99,6 @@
   ;; - [ ] For xref, refer to an marker in a file
   ;; - [ ] PDF version?
   ;; - [ ] Ebook version?
+  ;; - [ ] Move stuff from the parser namespace to a clerk one
 
   ())

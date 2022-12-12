@@ -136,7 +136,7 @@
               :heading-level 3}]
    :toc [3 (adapt-content opts content)]})
 
-(def ^:private link-classes
+(def link-classes
   [:hover:bg-orange-100 :hover:rounded :hover:no-underline
    :transition :duration-200 :ease-in :ease-out])
 
@@ -164,10 +164,9 @@
   (and (try (require ns*) "" (catch Exception _))
        (find-ns ns*)))
 
-(defmethod prose->output [:md :xref]
-  [opts & content]
-  (let [path (read-string (first content))
-        {:keys [xref ns*]} (if (keyword? path)
+(defn xref-info-from-path
+  [path]
+  (let [{:keys [xref ns*]} (if (keyword? path)
                              {:xref (some-> (get-in @*state [:path-info path]) str)
                               :ns* (require-find-ns (get-in @*state [:path-info path]))}
                              {:xref (str path)
@@ -192,17 +191,23 @@
         ;; Static build.
         (when-not path-matched
           (throw (ex-info "XRef does not exist" {:xref xref})))
-        {:type :link
-         :content (adapt-content opts [location-name])
-         :attrs {:href (str "#/" path-matched)
-                 :internal_link "true"
-                 :class link-classes}})
-      {:type :link
-       :content (adapt-content opts [location-name])
-       :attrs {:href (str "/_ns/" xref)
-               :internal_link "true"
-               :class (cond-> link-classes
-                        (nil? ns*) (conj :bg-red-300))}})))
+        {:location-name location-name
+         :path (str "#/" path-matched)
+         :error false})
+      {:location-name location-name
+       :path (str "/_ns/" xref)
+       :error (nil? ns*)})))
+
+(defmethod prose->output [:md :xref]
+  [opts & content]
+  (let [{:keys [location-name path error]}
+        (xref-info-from-path (read-string (first content)))]
+    {:type :link
+     :content (adapt-content opts [location-name])
+     :attrs {:href path
+             :internal_link "true"
+             :class (cond-> link-classes
+                      error (conj :bg-red-300))}}))
 
 (defmethod prose->output [:md :command]
   [opts & content]
