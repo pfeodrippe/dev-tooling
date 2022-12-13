@@ -154,11 +154,6 @@
 (defonce *state
   (atom {:path-info {}}))
 
-(defn add-path-info!
-  "Receives a map "
-  [m]
-  (swap! *state update :path-info merge m))
-
 (defn- require-find-ns
   [ns*]
   (and (try (require ns*) "" (catch Exception _))
