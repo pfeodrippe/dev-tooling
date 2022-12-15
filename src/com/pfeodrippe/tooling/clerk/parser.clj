@@ -458,6 +458,15 @@
             [:<>
              [:style {:type "text/css"}
               "
+@font-face {
+font-family: concourse_index;
+font-style: normal;
+font-weight: normal;
+font-stretch: normal;
+font-display: auto;
+src: url('../build/concourse_index_regular.woff2') format('woff2');
+}
+
 aside {
     margin-bottom: 2em;
     width: 12rem;

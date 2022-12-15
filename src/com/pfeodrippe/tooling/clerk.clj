@@ -1,5 +1,6 @@
 (ns com.pfeodrippe.tooling.clerk
   (:require
+   [clojure.java.io :as io]
    [nextjournal.clerk :as clerk]
    [com.pfeodrippe.tooling.clerk.util :as tool.clerk.util]
    [com.pfeodrippe.tooling.clerk.parser :as tool.parser]))
@@ -46,7 +47,15 @@
    (comp clerk/mark-presented
          (clerk/update-val #(clerk/with-viewer :html %)))}])
 
+;; Install font to the `public` folder.
+(do (io/make-parents "public/build/concourse_index_regular.woff2")
+    (io/copy
+     (io/file (io/resource "font/concourse_index_regular.woff2"))
+     (io/file  "public/build/concourse_index_regular.woff2")))
+
 (comment
 
+  ;; References:
+  ;; - https://danielmiessler.com/blog/build-successful-infosec-career/
 
   ())
