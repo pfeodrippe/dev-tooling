@@ -470,6 +470,30 @@ font-display: auto;
 src: url('../build/concourse_index_regular.woff2') format('woff2');
 }
 
+ol li:before {
+    counter-increment: foobar;
+    content: counter(foobar);
+    font-family: \"concourse_index\";
+    font-size: 1.5rem;
+    position: absolute;
+    margin-left: -3.0rem;
+    margin-top: -4px;
+}
+
+ol {
+    counter-reset: foobar;
+}
+
+ol li, ul li {
+    margin-left: 0.8rem;
+    list-style: none;
+}
+
+li {
+    margin-bottom: 1em !important;
+}
+
+
 aside {
     margin-bottom: 2em;
     width: 12rem;

@@ -15,7 +15,8 @@
              [:div.text-xl {:class (when-not (zero? idx) [:mt-8])}
               [:b title]]
              (when (seq pages)
-               [:ul.columns-2 {:style {:margin-top "5px"}}
+               [:ul.columns-2 {:style {:margin-top "5px"
+                                       :padding-left "0.3rem"}}
                 (for [child-page pages]
                   (let [{:keys [location-name path error]}
                         (tool.parser/xref-info-from-path child-page)]
