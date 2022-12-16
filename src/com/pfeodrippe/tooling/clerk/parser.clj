@@ -295,14 +295,16 @@
 
 (defn- eval-clojurized
   [match]
-  (->> (eval-common/eval-forms match)
-       (adapt-content {})))
+  (binding [*ns* (or *ns* (find-ns 'user))]
+    (->> (eval-common/eval-forms match)
+         (adapt-content {}))))
 
 (defn- auto-resolves [ns]
-  (as-> (ns-aliases ns) $
-    (assoc $ :current (ns-name *ns*))
-    (zipmap (keys $)
-            (map ns-name (vals $)))))
+  (when ns
+    (as-> (ns-aliases ns) $
+      (assoc $ :current (ns-name *ns*))
+      (zipmap (keys $)
+              (map ns-name (vals $))))))
 
 ;; Override :tag dispatcher so we can collect all tags.
 (def ^:dynamic **tags-collector* (atom []))
@@ -325,9 +327,10 @@
       ;; If we have a symbol that does not resolve to var, make it
       ;; a keyword so it can be called as a tag.
       (and (symbol? node-value)
-           (nil? (requiring-resolve (if (qualified-symbol? node-value)
-                                      node-value
-                                      (symbol (str *ns*) (name node-value))))))
+           (nil? (when *ns*
+                   (requiring-resolve (if (qualified-symbol? node-value)
+                                        node-value
+                                        (symbol (str *ns*) (name node-value)))))))
       [`prose-parser {:tag-name (keyword node-value)}]
 
       :else
