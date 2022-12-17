@@ -1,6 +1,6 @@
 ^{:nextjournal.clerk/visibility {:code :hide}}
-(ns com.pfeodrippe.tooling.experiment.test1
-  {:clerk/name "test 1"}
+(ns com.pfeodrippe.tooling.experiment.test2
+  {:clerk/name "test 2"}
   (:require
    [nextjournal.clerk :as clerk]
    [com.pfeodrippe.tooling.clerk.parser :as tool.parser :refer [prose->output adapt-content]]))
@@ -12,7 +12,7 @@
 
 {::clerk/visibility {:code :fold :result :show}}
 
-;; ◊page-name[{:subtitle "Getting started with Portal"}]{test 1}
+;; ◊page-name[{:subtitle "Getting started with Portal"}]{test 2}
 
 ;; ◊(if com.pfeodrippe.tooling.clerk.var-changes/*build* "Build!" "Oh no")
 
@@ -20,7 +20,7 @@
 
 ;; ◊title{What's Portal?}
 
-;; ◊xref{com.pfeodrippe.tooling.experiment.test2}
+;; ◊xref{com.pfeodrippe.tooling.experiment.test1}
 
 #_^{:nextjournal.clerk/visibility {:code :show}}
 {:a 10 :f "asdjasdijfsodifjsodifjo" :c "dsfjasdfoijasdi" :d "fadsfjasiofjoiasdjfa" :e "fasdasdasd" :ff "asdasdasdsa"}

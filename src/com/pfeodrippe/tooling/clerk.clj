@@ -52,7 +52,7 @@
 (do (io/make-parents "public/build/concourse_index_regular.woff2")
     (io/copy
      (io/file (io/resource "font/concourse_index_regular.woff2"))
-     (io/file  "public/build/concourse_index_regular.woff2")))
+     (io/file "public/build/concourse_index_regular.woff2")))
 
 (comment
 
