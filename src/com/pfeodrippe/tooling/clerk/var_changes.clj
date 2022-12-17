@@ -26,7 +26,7 @@
    [:body.dark:bg-gray-900
     [:div#clerk]
     [:script {:type "module"} "let viewer = nextjournal.clerk.sci_env
-let state = " (-> state view/->html pr-str) "
+let state = " (-> state v/->edn pr-str) "
 viewer.set_state(viewer.read_string(state))
 viewer.mount(document.getElementById('clerk'))\n"
      (when conn-ws?
@@ -114,7 +114,8 @@ app.init(opts)\n"]]))
       (let [{duration :time-ms} (eval/time-ms (upload-cache-fn state))]
         (report-fn {:stage :done :duration duration})))
     (report-fn {:stage :finished :state state :duration duration :total-duration (eval/elapsed-ms start)})))
-(def ^:dynamic *build* nil)
-(alter-var-root #'clerk.builder/build-static-app! (constantly (fn [opts]
-                                                                (binding [*build* opts]
-                                                                  (build-static-app! opts)))))
+(defonce ^:dynamic *build* nil)
+(alter-var-root #'clerk.builder/build-static-app!
+                (constantly (fn [opts]
+                              (binding [*build* opts]
+                                (build-static-app! opts)))))
