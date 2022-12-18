@@ -8,6 +8,129 @@
    [nextjournal.clerk.parser :as parser]
    [nextjournal.clerk.analyzer :as analyzer]))
 
+(def ^:private style
+  "
+@font-face {
+font-family: concourse_index;
+font-style: normal;
+font-weight: normal;
+font-stretch: normal;
+font-display: auto;
+src: url('../build/concourse_index_regular.woff2') format('woff2');
+}
+
+ol li:before {
+    counter-increment: foobar;
+    content: counter(foobar);
+    font-family: \"concourse_index\";
+    font-size: 1.5rem;
+    position: absolute;
+    margin-left: -3.0rem;
+    margin-top: -4px;
+}
+
+ol {
+    counter-reset: foobar;
+}
+
+ol li, ul li {
+    margin-left: 0.8rem;
+    list-style: none;
+}
+
+li {
+    margin-bottom: 1em !important;
+}
+
+
+aside {
+    margin-bottom: 2em;
+    width: 12rem;
+    padding-left: .5rem;
+    margin-left: -14rem;
+    float: left;
+    text-align: right;
+    position: absolute;
+}
+
+aside > p {
+    color: #667;
+    font-size: 1rem;
+    font-family: 'Roboto Slab', serif;
+}
+
+p {
+    font-family: 'Roboto Slab', serif;
+    color: black;
+    font-size: 1.1rem;
+}
+
+title-block {
+
+    position: absolute;
+    margin-bottom: 2em;
+    border-top: solid 3px #333;
+    padding-top: 5px;
+    width: 8rem;
+    padding-left: .5rem;
+    margin-left: -180px;
+    float: left;
+    text-align: right;
+
+    font-family: 'Roboto Slab', serif;
+    color: black;
+    font-size: 1.1rem;
+}
+
+title-block topic {
+    display:block;
+    font-family: 'Roboto Slab', serif;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    font-size: 125%;
+    line-height: 1.10;
+    border-bottom: inherit;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-weight: bolder;
+    border-top: 0;
+    padding-top: 0;
+}
+
+short-rule {
+    display: block;
+    font-size: 100%;
+    line-height: 1.25;
+    font-style: italic;
+    hyphens: none;
+}
+
+a[external_link] {
+    color: inherit !important;
+}
+
+a[external_link]::after {
+    position: relative;
+    content: \"﻿°\";
+    margin-left: 0em;
+    font-size: 90%;
+    top: -0.1em;
+    color: rgb(153, 51, 51);
+    font-feature-settings: \"caps\";
+    font-variant-numeric: normal;
+}
+
+a[internal_link] {
+    color: inherit !important;
+    // font-variant-caps: all-small-caps;
+    // font-family: PT Serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 17px;
+}
+
+")
+
 (defn ->html [{:as state :keys [conn-ws?] :or {conn-ws? true}}]
   (hiccup/html5
    [:head
@@ -21,6 +144,8 @@
     [:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
             :rel "stylesheet"
             :type "text/css"}]
+
+    [:style {:type "text/css"} style]
 
     (include-css+js state)]
    [:body.dark:bg-gray-900
@@ -49,6 +174,8 @@ window.ws_send = msg => ws.send(msg)")]]))
     [:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
             :rel "stylesheet"
             :type "text/css"}]
+
+    [:style {:type "text/css"} style]
 
     (when current-path (v/open-graph-metas (-> state :path->doc (get current-path) v/->value :open-graph)))
     (include-css+js state)]
