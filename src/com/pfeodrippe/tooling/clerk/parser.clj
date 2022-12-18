@@ -1,5 +1,7 @@
 (ns com.pfeodrippe.tooling.clerk.parser
   (:require
+   [nextjournal.clerk.classpath :as cp]
+   [babashka.fs :as fs]
    [nextjournal.clerk.viewer :as clerk.viewer]
    [nextjournal.markdown :as md]
    [nextjournal.clerk.parser :as clerk.parser]
@@ -156,24 +158,51 @@
 (defonce *state
   (atom {:path-info {}}))
 
+(defn- ns->file [ns]
+  (some (fn [dir]
+          (some (fn [ext]
+                  (let [path (str dir fs/file-separator (clerk.analyzer/ns->path ns) ext)]
+                    (when (fs/exists? path)
+                      path)))
+                [".clj" ".cljc" ".md"]))
+        (cp/classpath-directories)))
+
+(defn- ns->jar [ns]
+  (let [path (clerk.analyzer/ns->path ns)]
+    (some #(when (or (.getJarEntry % (str path ".clj"))
+                     (.getJarEntry % (str path ".cljc"))
+                     (.getJarEntry % (str path ".md")))
+             (.getName %))
+          (cp/classpath-jarfiles))))
+
 (defn- require-find-ns
   [ns*]
-  (and (try (require ns*) "" (catch Exception _))
-       (find-ns ns*)))
+  (or (and (try (require ns*) "" (catch Exception _))
+           (find-ns ns*))
+      (ns->file ns*)
+      (ns->jar ns*)))
 
 (defn xref-info-from-path
   [path]
-  (let [{:keys [xref ns*]} (if (keyword? path)
-                             {:xref (some-> (get-in @*state [:path-info path]) str)
-                              :ns* (require-find-ns (get-in @*state [:path-info path]))}
-                             {:xref (str path)
-                              :ns* (require-find-ns path)})
-        location-name (if ns*
-                        (or (:clerk/name (meta ns*))
-                            xref)
-                        (str path))]
+  (let [{:keys [xref ns*]
+         clerk-name :clerk/name}
+        (if (keyword? path)
+          (merge
+           {:xref (some-> (get-in @*state [:path-info path]) str)
+            :ns* (require-find-ns (get-in @*state [:path-info path]))}
+           (meta (get-in @*state [:path-info path])))
+          {:xref (str path)
+           :ns* (require-find-ns path)})
+
+        location-name (or clerk-name
+                          (if ns*
+                            (or (:clerk/name (meta ns*))
+                                xref)
+                            (str path)))]
     (if var-changes/*build*
-      (let [file-path (clerk.analyzer/ns->file xref)
+      (let [file-path (if (string? ns*)
+                        ns*
+                        (clerk.analyzer/ns->file xref))
             expanded-paths (->> (nextjournal.clerk.builder/process-build-opts
                                  (assoc var-changes/*build*
                                         :expand-paths? true))
@@ -564,12 +593,13 @@
 
         (or (when-let [ns-maybe (some-> (get (re-matches #"/_ns/([^/]*).*" uri) 1)
                                         symbol)]
-              (when-let [ns* (and (try (require ns-maybe) "" (catch Exception _))
-                                  (find-ns ns-maybe))]
+              (when-let [ns* (require-find-ns ns-maybe)]
                 ;; We added this so we can recognize a namespace in the uri
-                ;; and move there.
-                (when (not= (str "/_ns/" (:ns @clerk.webserver/!doc))
-                            uri)
+                ;; and go there.
+                (when (or (not= (str "/_ns/" (:ns @clerk.webserver/!doc))
+                                uri)
+                          (and (string? ns*)
+                               (str/ends-with? ns* (:file @clerk.webserver/!doc))))
                   (clerk/show! ns*))
                 {:status  200
                  :headers {"Content-Type" "text/html"

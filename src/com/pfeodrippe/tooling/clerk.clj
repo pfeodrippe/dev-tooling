@@ -25,10 +25,10 @@
                                                       ;; if we set these properties through tailwind.
                                                       :margin 0
                                                       :margin-bottom "0.6rem"}}
-                     [:a {:href path
-                          :class (cond-> tool.parser/link-classes
-                                   error (conj :bg-red-300))
-                          :style {:color "inherit"}}
+                     [:a.block {:href path
+                                :class (cond-> tool.parser/link-classes
+                                         error (conj :bg-red-300))
+                                :style {:color "inherit"}}
                       location-name]]))])]))
     {:type `index-viewer}))
 
