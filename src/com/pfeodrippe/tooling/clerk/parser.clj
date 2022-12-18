@@ -236,6 +236,18 @@
   [_opts & _content]
   {:type :text :text ""})
 
+(defmethod prose->output [:md :list]
+  [opts & content]
+  {:type :bullet-list
+   :content (->> content
+                 (partition-by #{::hard-break})
+                 (remove #{'(::hard-break)})
+                 (mapv (fn [v]
+                         {:type :list-item
+                          :content (adapt-content opts v)}))
+                 (adapt-content opts))
+   :attrs {:bullet_list "true"}})
+
 (defmethod prose->output [:md :numbered-list]
   [opts & content]
   {:type :numbered-list
@@ -524,7 +536,9 @@
    {:name :nextjournal.markdown/topic
     :transform-fn (clerk.viewer/into-markup [:topic])}
    {:name :nextjournal.markdown/short-rule
-    :transform-fn (clerk.viewer/into-markup [:short-rule])}])
+    :transform-fn (clerk.viewer/into-markup [:short-rule])}
+   {:name :nextjournal.markdown/bullet-list
+    :transform-fn (clerk.viewer/into-markup #(vector :ul (:attrs %)))}])
 
 (def ^:private updated-viewers
   (clerk.viewer/update-viewers

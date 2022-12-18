@@ -29,7 +29,16 @@ ol li:before {
     margin-top: -4px;
 }
 
-ol {
+ul[bullet_list] li:before {
+    content: \"•\";
+    font-family: \"concourse_index\";
+    position: absolute;
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-left: -3rem;
+}
+
+ol, ul {
     counter-reset: foobar;
 }
 
@@ -41,7 +50,6 @@ ol li, ul li {
 li {
     margin-bottom: 1em !important;
 }
-
 
 aside {
     margin-bottom: 2em;
