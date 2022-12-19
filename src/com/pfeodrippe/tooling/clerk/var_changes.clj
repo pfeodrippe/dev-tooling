@@ -79,9 +79,9 @@ title-block {
     margin-bottom: 2em;
     border-top: solid 3px #333;
     padding-top: 5px;
-    width: 8rem;
+    width: 10rem;
     padding-left: .5rem;
-    margin-left: -180px;
+    margin-left: -12rem;
     float: left;
     text-align: right;
 

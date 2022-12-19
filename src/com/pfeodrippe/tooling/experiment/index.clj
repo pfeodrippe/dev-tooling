@@ -61,6 +61,7 @@
   ;; - [x] Support md files
   ;;   - [x] Check static build
   ;;   - [x] Make xref work pointing to it
+  ;; - [ ] Quote
   ;; - [ ] Add footnotes
   ;; - [ ] Add inline blocks
   ;; - [ ] Navigation (bottom bar)
@@ -78,5 +79,6 @@
   ;; - [ ] Support comment
   ;; - [ ] Create Clerk text game
   ;; - [ ] Fix flashing font
+  ;; - [ ] Fix non-bundle static app navigation
 
   ())

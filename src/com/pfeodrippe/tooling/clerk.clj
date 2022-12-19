@@ -20,11 +20,11 @@
                 (for [child-page pages]
                   (let [{:keys [location-name path error]}
                         (tool.parser/xref-info-from-path child-page)]
-                    [:li.list-none.break-all {:style {:break-inside :avoid-column
-                                                      ;; We add to style as there is a rule that overrides
-                                                      ;; if we set these properties through tailwind.
-                                                      :margin 0
-                                                      :margin-bottom "0.6rem"}}
+                    [:li.list-none {:style {:break-inside :avoid-column
+                                            ;; We add to style as there is a rule that overrides
+                                            ;; if we set these properties through tailwind.
+                                            :margin 0
+                                            :margin-bottom "0.6rem"}}
                      [:a.block {:href path
                                 :class (cond-> tool.parser/link-classes
                                          error (conj :bg-red-300))
