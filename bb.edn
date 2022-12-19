@@ -1,12 +1,19 @@
-{:tasks
+{:deps
+ {io.github.nextjournal/clerk {:git/sha "8c3ca7c10d0c1325e10031c711f3c23df846b952"}}
+
+ :tasks
  {:init
   (def args *command-line-args*)
 
   clean
   {:task (clojure "-T:build org.corfield.build/clean")}
 
-  build
+  clerk-build
   {:depends [clean]
+   :task (clojure "-T:build clerk-build")}
+
+  build
+  {:depends [clean clerk-build]
    :task (clojure (format "-T:build org.corfield.build/jar :transitive true :lib io.github.pfeodrippe/dev-tooling :version '\"%s\"'"
                           (first args)))}
 

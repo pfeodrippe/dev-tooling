@@ -1,8 +1,6 @@
 (ns com.pfeodrippe.tooling.clerk.portal
   (:require
    [clojure.string :as str]
-   [nextjournal.clerk :as clerk]
-   [com.pfeodrippe.tooling.portal :as tool.portal]
    [portal.api :as portal]))
 
 (defn- submit
@@ -46,10 +44,10 @@
                (-> portal-url (str/split #"\?") last))
           portal-url)
 
-        :nextjournal/width :full}))
+        #_ #_:nextjournal/width :full}))
    :render-fn '#(v/html [:iframe
                          {:src %
-                          :style {:width "90%"
+                          :style {:width "100%"
                                   :height "60vh"
                                   :margin-left :auto
                                   :margin-right :auto
