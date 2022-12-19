@@ -49,10 +49,11 @@
          (clerk/update-val #(clerk/with-viewer :html %)))}])
 
 ;; Install font to the `public` folder.
-(do (io/make-parents "public/build/concourse_index_regular.woff2")
-    (io/copy
-     (io/file (io/resource "font/concourse_index_regular.woff2"))
-     (io/file "public/build/concourse_index_regular.woff2")))
+(with-open [concourse-font (io/input-stream (io/resource "font/concourse_index_regular.woff2"))]
+  (io/make-parents "public/build/concourse_index_regular.woff2")
+  (io/copy
+   concourse-font
+   (io/file "public/build/concourse_index_regular.woff2")))
 
 (comment
 
