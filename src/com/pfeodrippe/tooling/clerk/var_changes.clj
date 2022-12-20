@@ -149,7 +149,7 @@ a[internal_link] {
     [:link {:rel :icon :href "data:,"}]
 
     ;; Add some fonts.
-    [:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
+    [:link {:href "https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
             :rel "stylesheet"
             :type "text/css"}]
 
@@ -179,7 +179,7 @@ window.ws_send = msg => ws.send(msg)")]]))
     [:link {:rel :icon :href "data:,"}]
 
     ;; Add some fonts.
-    [:link {:href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
+    [:link {:href "https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,latin-ext"
             :rel "stylesheet"
             :type "text/css"}]
 
