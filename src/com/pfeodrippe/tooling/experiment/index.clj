@@ -61,6 +61,7 @@
   ;; - [x] Support md files
   ;;   - [x] Check static build
   ;;   - [x] Make xref work pointing to it
+  ;; - [x] Show who references what
   ;; - [ ] Quote
   ;; - [ ] Add footnotes
   ;; - [ ] Add inline blocks

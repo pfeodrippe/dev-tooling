@@ -20,7 +20,7 @@
 
 ;; ◊title{What's Portal?}
 
-;; ◊xref{com.pfeodrippe.tooling.experiment.test1}
+;; ◊xref{:doc/test-1}
 
 #_^{:nextjournal.clerk/visibility {:code :show}}
 {:a 10 :f "asdjasdijfsodifjsodifjo" :c "dsfjasdfoijasdi" :d "fadsfjasiofjoiasdjfa" :e "fasdasdasd" :ff "asdasdasdsa"}

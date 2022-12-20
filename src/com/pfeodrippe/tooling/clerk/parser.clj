@@ -6,6 +6,7 @@
    [nextjournal.markdown :as md]
    [nextjournal.clerk.parser :as clerk.parser]
    [nextjournal.markdown.parser :as md.parser]
+   [clojure.java.io :as io]
    [fr.jeremyschoffen.prose.alpha.reader.core :as reader]
    [fr.jeremyschoffen.prose.alpha.eval.common :as eval-common]
    [clojure.string :as str]
@@ -17,7 +18,8 @@
    [nextjournal.clerk.view :as clerk.view]
    [nextjournal.clerk.analyzer :as clerk.analyzer]
    [nextjournal.clerk.builder :as clerk.builder]
-   [com.pfeodrippe.tooling.clerk.var-changes :as var-changes]))
+   [com.pfeodrippe.tooling.clerk.var-changes :as var-changes]
+   [clojure.main]))
 
 (defn- remove-hard-breaks
   [evaluated-result]
@@ -175,6 +177,29 @@
              (.getName %))
           (cp/classpath-jarfiles))))
 
+(defn- path->ns
+  [path]
+  (let [->symbol (fn [absolute-dir absolute-path]
+                   (-> (if (nil? absolute-dir)
+                         absolute-path
+                         (str/replace absolute-path (str absolute-dir "/") ""))
+                       (str/replace #"\/" ".")
+                       (str/replace #"\.clj" "")
+                       (str/replace #"\.cljc" "")
+                       (str/replace #"\.md" "")
+                       clojure.main/demunge
+                       symbol))]
+    (if (and (instance? java.net.URL path)
+             (= (.getProtocol path) "jar"))
+      (->symbol nil (subs (last (str/split (.getPath path) #"!")) 1))
+      (some (fn [dir]
+              (let [absolute-path (.getAbsolutePath (io/file path))
+                    absolute-dir (.getAbsolutePath dir)]
+                (when (and (str/starts-with? absolute-path absolute-dir)
+                           (fs/exists? path))
+                  (->symbol absolute-dir absolute-path))))
+            (cp/classpath-directories)))))
+
 (defn- require-find-ns
   [ns*]
   (or (and (try (require ns*) "" (catch Exception _))
@@ -194,11 +219,14 @@
           {:xref (str path)
            :ns* (require-find-ns path)})
 
-        location-name (or clerk-name
+        notebook-name (or clerk-name
                           (if ns*
                             (or (:clerk/name (meta ns*))
                                 xref)
-                            (str path)))]
+                            (str path)))
+        metadata {:notebook-name notebook-name
+                  :xref (symbol xref)
+                  :clerk-name clerk-name}]
     (if var-changes/*build*
       (let [file-path (if (string? ns*)
                         ns*
@@ -217,19 +245,22 @@
         ;; Static build.
         (when-not path-matched
           (println "\n\nWARNING: XRef not found for path " {:path path} "\n\n"))
-        {:location-name location-name
+        {:notebook-name notebook-name
          :path (str "#/" path-matched)
-         :error (nil? path-matched)})
-      {:location-name location-name
+         :error (nil? path-matched)
+         :metadata metadata})
+      {:notebook-name notebook-name
        :path (str "/_ns/" xref)
-       :error (nil? ns*)})))
+       :error (nil? ns*)
+       :metadata metadata})))
 
 (defmethod prose->output [:md :xref]
   [opts & content]
-  (let [{:keys [location-name path error]}
+  (let [{:keys [notebook-name path error metadata]}
         (xref-info-from-path (read-string (first content)))]
     {:type :link
-     :content (adapt-content opts [location-name])
+     :content (adapt-content opts [notebook-name])
+     :metadata metadata
      :attrs {:href path
              :internal_link "true"
              :class (cond-> link-classes
@@ -338,7 +369,7 @@
 
 (defn- eval-clojurized
   [match]
-  (binding [*ns* (or *ns* (find-ns 'user))]
+  (binding [*ns* (or *ns* (find-ns 'clojure.core))]
     (->> (eval-common/eval-forms match)
          (adapt-content {}))))
 
@@ -399,6 +430,9 @@
                                                 (str/replace #"\n\n" "◊:hard-break{}"))}])))))
 
 (defn blocks->markdown [{:as doc :keys [ns]}]
+  (swap! *state assoc-in
+         [:tags (path->ns (:file doc))]
+         [])
   (let [updated-doc
         (-> doc
             (update :blocks
@@ -423,6 +457,10 @@
                                                          eval-clojurized
                                                          remove-hard-breaks)]
                                          result))]
+                                 (swap! *state update-in
+                                        [:tags (path->ns (:file doc))]
+                                        concat
+                                        @*collector)
                                  {:type :markdown
                                   :doc {:type :doc
                                         :content content}
@@ -543,7 +581,8 @@
                                                              (case viewer-name
                                                                (:code :code-folded) :wide
                                                                :prose))
-                                                     :wide "w-full max-w-wide"
+                                                     ;; `ml-24` is used for the new style.
+                                                     :wide "w-full max-w-wide ml-24"
                                                      :full "w-full"
                                                      "w-full max-w-prose px-8")]))}
                                   [v/inspect-presented x]]))

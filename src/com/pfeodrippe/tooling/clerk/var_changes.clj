@@ -139,6 +139,7 @@ a[internal_link] {
 
 ")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn ->html [{:as state :keys [conn-ws?] :or {conn-ws? true}}]
   (hiccup/html5
    [:head
@@ -195,6 +196,7 @@ let opts = viewer.read_string(" (-> state v/->edn pr-str) ")
 app.init(opts)\n"]]))
 (alter-var-root #'view/->static-app (constantly ->static-app))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn build-static-app! [{:as opts :keys [bundle?]}]
   (let [{:as opts :keys [download-cache-fn upload-cache-fn report-fn compile-css? expanded-paths error]}
         (try (process-build-opts (assoc opts :expand-paths? true))

@@ -18,7 +18,7 @@
                [:ul.columns-2 {:style {:margin-top "5px"
                                        :padding-left "0.3rem"}}
                 (for [child-page pages]
-                  (let [{:keys [location-name path error]}
+                  (let [{:keys [notebook-name path error]}
                         (tool.parser/xref-info-from-path child-page)]
                     [:li.list-none {:style {:break-inside :avoid-column
                                             ;; We add to style as there is a rule that overrides
@@ -29,7 +29,7 @@
                                 :class (cond-> tool.parser/link-classes
                                          error (conj :bg-red-300))
                                 :style {:color "inherit"}}
-                      location-name]]))])]))
+                      notebook-name]]))])]))
     {:type `index-viewer}))
 
 (defn add-path-info!
@@ -40,6 +40,18 @@
   {:doc/test-1 `com.pfeodrippe.tooling.experiment.test1}"
   [m]
   (swap! tool.parser/*state update :path-info merge m))
+
+(defn derive-ns->xrefs
+  []
+  (->> (update-vals (:tags @tool.parser/*state)
+                    (fn [v]
+                      (->> v
+                           (filter #(= (:tag-name (second  %))
+                                       :xref))
+                           (mapv (comp :xref :metadata eval))
+                           set)))
+       (filter (comp seq second))
+       (into {})))
 
 (tool.clerk.util/add-global-viewers!
  [{:name ::index-viewer

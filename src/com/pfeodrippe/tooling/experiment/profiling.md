@@ -8,6 +8,8 @@ a whole.
 This report may suggest improvements, but just as a first thought, don't rely
 too much on them.
 
+◊xref{:doc/test-1}
+
 ◊title{Services in scope}
 The services we are going to see are
 ◊numbered-list{
