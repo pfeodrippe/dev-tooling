@@ -62,6 +62,7 @@
   ;;   - [x] Check static build
   ;;   - [x] Make xref work pointing to it
   ;; - [x] Show who references what
+  ;; - [ ] Attributes search
   ;; - [ ] Quote
   ;; - [ ] Add footnotes
   ;; - [ ] Add inline blocks
@@ -81,5 +82,6 @@
   ;; - [ ] Create Clerk text game
   ;; - [ ] Fix flashing font
   ;; - [ ] Fix non-bundle static app navigation
+  ;; - [ ] Create a way to redirect when the notebook name needs to be changed
 
   ())

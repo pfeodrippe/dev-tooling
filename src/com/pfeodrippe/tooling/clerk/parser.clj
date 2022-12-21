@@ -179,26 +179,27 @@
 
 (defn- path->ns
   [path]
-  (let [->symbol (fn [absolute-dir absolute-path]
-                   (-> (if (nil? absolute-dir)
-                         absolute-path
-                         (str/replace absolute-path (str absolute-dir "/") ""))
-                       (str/replace #"\/" ".")
-                       (str/replace #"\.clj" "")
-                       (str/replace #"\.cljc" "")
-                       (str/replace #"\.md" "")
-                       clojure.main/demunge
-                       symbol))]
-    (if (and (instance? java.net.URL path)
-             (= (.getProtocol path) "jar"))
-      (->symbol nil (subs (last (str/split (.getPath path) #"!")) 1))
-      (some (fn [dir]
-              (let [absolute-path (.getAbsolutePath (io/file path))
-                    absolute-dir (.getAbsolutePath dir)]
-                (when (and (str/starts-with? absolute-path absolute-dir)
-                           (fs/exists? path))
-                  (->symbol absolute-dir absolute-path))))
-            (cp/classpath-directories)))))
+  (when path
+    (let [->symbol (fn [absolute-dir absolute-path]
+                     (-> (if (nil? absolute-dir)
+                           absolute-path
+                           (str/replace absolute-path (str absolute-dir "/") ""))
+                         (str/replace #"\/" ".")
+                         (str/replace #"\.clj" "")
+                         (str/replace #"\.cljc" "")
+                         (str/replace #"\.md" "")
+                         clojure.main/demunge
+                         symbol))]
+      (if (and (instance? java.net.URL path)
+               (= (.getProtocol path) "jar"))
+        (->symbol nil (subs (last (str/split (.getPath path) #"!")) 1))
+        (some (fn [dir]
+                (let [absolute-path (.getAbsolutePath (io/file path))
+                      absolute-dir (.getAbsolutePath dir)]
+                  (when (and (str/starts-with? absolute-path absolute-dir)
+                             (fs/exists? path))
+                    (->symbol absolute-dir absolute-path))))
+              (cp/classpath-directories))))))
 
 (defn- require-find-ns
   [ns*]
@@ -225,7 +226,7 @@
                                 xref)
                             (str path)))
         metadata {:notebook-name notebook-name
-                  :xref (symbol xref)
+                  :xref (some-> xref symbol)
                   :clerk-name clerk-name}]
     (if var-changes/*build*
       (let [file-path (if (string? ns*)
