@@ -3,7 +3,8 @@
    [clojure.java.io :as io]
    [nextjournal.clerk :as clerk]
    [com.pfeodrippe.tooling.clerk.util :as tool.clerk.util]
-   [com.pfeodrippe.tooling.clerk.parser :as tool.parser]))
+   [com.pfeodrippe.tooling.clerk.parser :as tool.parser]
+   [com.pfeodrippe.tooling.clerk.var-changes :as tool.var-changes]))
 
 (defn view-index
   [sections]
@@ -17,7 +18,7 @@
              (when (seq pages)
                [:ul.columns-2 {:style {:margin-top "5px"
                                        :padding-left "0.3rem"}}
-                (for [child-page pages]
+                (for [child-page (remove nil? pages)]
                   (let [{:keys [notebook-name path error]}
                         (tool.parser/xref-info-from-path child-page)]
                     [:li.list-none {:style {:break-inside :avoid-column
@@ -52,6 +53,11 @@
                            set)))
        (filter (comp seq second))
        (into {})))
+
+(defn build?
+  "Check if clerk is building the static app."
+  []
+  (boolean tool.var-changes/*build*))
 
 (tool.clerk.util/add-global-viewers!
  [{:name ::index-viewer

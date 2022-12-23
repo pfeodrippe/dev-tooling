@@ -337,27 +337,31 @@
     ;; we pass the root unreachable paths here.
     (transform-eql [] pathom-eql-shape {:unreachable-paths root-unreachable-paths})))
 
+(defn mock-pathom-env
+  [pathom-env]
+  (update pathom-env
+          ::pci/index-resolvers
+          (fn [index-resolvers]
+            (->> index-resolvers
+                 (mapv (fn [[resolver-name {:keys [resolve config] :as resolver}]]
+                         [resolver-name
+                          (-> resolver
+                              (assoc :resolve
+                                     (with-meta
+                                       (fn [_env _args]
+                                         (p.shape/query->shape-descriptor
+                                          (::pco/output config)))
+                                       (meta resolve)))
+                              (update-in [:config ::pco/op-name] with-meta resolver))]))
+                 (into {})))))
+
 (defn process-query
   "Given a pathom env, an entity and a EQL query, modify the resolvers
   so they always return their outputs.
 
   This can be used to see how a query using static information."
   [pathom-env entity eql-query]
-  (let [pathom-env (update pathom-env
-                           ::pci/index-resolvers
-                           (fn [index-resolvers]
-                             (->> index-resolvers
-                                  (mapv (fn [[resolver-name {:keys [resolve config] :as resolver}]]
-                                          [resolver-name
-                                           (-> resolver
-                                               (assoc :resolve
-                                                      (with-meta
-                                                        (fn [_env _args]
-                                                          (p.shape/query->shape-descriptor
-                                                           (::pco/output config)))
-                                                        (meta resolve)))
-                                               (update-in [:config ::pco/op-name] with-meta resolver))]))
-                                  (into {}))))
+  (let [pathom-env (mock-pathom-env pathom-env)
         pathom-result (p.eql/process pathom-env entity eql-query)]
     (with-meta (attr-dependencies-from-pathom-result pathom-result)
       {:type `processed-query

@@ -63,6 +63,7 @@
   ;;   - [x] Make xref work pointing to it
   ;; - [x] Show who references what
   ;; - [ ] Attributes search
+  ;; - [ ] Reference *build so we can hide pages
   ;; - [ ] Quote
   ;; - [ ] Add footnotes
   ;; - [ ] Add inline blocks
@@ -83,5 +84,8 @@
   ;; - [ ] Fix flashing font
   ;; - [ ] Fix non-bundle static app navigation
   ;; - [ ] Create a way to redirect when the notebook name needs to be changed
+  ;; - [ ] Add some indication that a notebook requires the backend to be
+  ;;       rendered fully
+  ;; - [ ] Publish it as a separate library
 
   ())
