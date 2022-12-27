@@ -3,13 +3,23 @@
    [hiccup.page :as hiccup]
    [nextjournal.clerk.viewer :as v]
    [nextjournal.clerk.view :as view :refer [include-css+js]]
-   [nextjournal.clerk.builder :as clerk.builder :refer [process-build-opts compile-css! write-static-app! doc-url]]
+   [nextjournal.clerk.builder :as clerk.builder :refer [process-build-opts compile-css! doc-url build-static-app-opts
+                                                        ->html-extension ssr! default-out-path]]
    [nextjournal.clerk.eval :as eval]
    [nextjournal.clerk.parser :as parser]
-   [nextjournal.clerk.analyzer :as analyzer]))
+   [nextjournal.clerk.analyzer :as analyzer]
+   [babashka.fs :as fs]
+   [clojure.java.browse :as browse]
+   [nextjournal.clerk.webserver :as webserver]))
 
-(def ^:private style
-  "
+(defonce ^:dynamic *build* nil)
+
+(defn- style
+  []
+  (str
+   (if (or (nil? *build*)
+           (:bundle? *build*))
+     "
 @font-face {
 font-family: concourse_index;
 font-style: normal;
@@ -19,6 +29,20 @@ font-display: auto;
 src: url('../build/concourse_index_regular.woff2') format('woff2');
 }
 
+"
+     (format "
+@font-face {
+font-family: concourse_index;
+font-style: normal;
+font-weight: normal;
+font-stretch: normal;
+font-display: auto;
+src: url('%s../build/concourse_index_regular.woff2') format('woff2');
+}
+
+"
+             (v/relative-root-prefix-from (:current-path *build*))))
+   "
 ol li:before {
     counter-increment: foobar;
     content: counter(foobar);
@@ -137,7 +161,7 @@ a[internal_link] {
     font-size: 17px;
 }
 
-")
+"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn ->html [{:as state :keys [conn-ws?] :or {conn-ws? true}}]
@@ -154,7 +178,7 @@ a[internal_link] {
             :rel "stylesheet"
             :type "text/css"}]
 
-    [:style {:type "text/css"} style]
+    [:style {:type "text/css"} (style)]
 
     (include-css+js state)]
    [:body.dark:bg-gray-900
@@ -184,7 +208,7 @@ window.ws_send = msg => ws.send(msg)")]]))
             :rel "stylesheet"
             :type "text/css"}]
 
-    [:style {:type "text/css"} style]
+    [:style {:type "text/css"} (style)]
 
     (when current-path (v/open-graph-metas (-> state :path->doc (get current-path) v/->value :open-graph)))
     (include-css+js state)]
@@ -197,6 +221,29 @@ app.init(opts)\n"]]))
 (alter-var-root #'view/->static-app (constantly ->static-app))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn write-static-app-2!
+  [opts docs]
+  (let [{:as opts :keys [bundle? out-path browse? ssr?]} (process-build-opts opts)
+        index-html (str out-path fs/file-separator "index.html")
+        {:as static-app-opts :keys [path->url path->doc]} (build-static-app-opts opts docs)]
+    (when-not (fs/exists? (fs/parent index-html))
+      (fs/create-dirs (fs/parent index-html)))
+    (if bundle?
+      (spit index-html (view/->static-app static-app-opts))
+      (do (when-not (contains? (-> path->url vals set) "") ;; no user-defined index page
+            (spit index-html (view/->static-app (dissoc static-app-opts :path->doc))))
+          (doseq [[path doc] path->doc]
+            (binding [*build* (merge *build* {:current-path path})]
+              (let [out-html (str out-path fs/file-separator (->> path (v/map-index opts) ->html-extension))]
+                (fs/create-dirs (fs/parent out-html))
+                (spit out-html (view/->static-app (cond-> (assoc static-app-opts :path->doc (hash-map path doc) :current-path path)
+                                                    ssr? ssr!))))))))
+    (when browse?
+      (browse/browse-url (-> index-html fs/absolutize .toString (@#'clerk.builder/path-to-url-canonicalize))))
+    {:docs docs
+     :index-html index-html
+     :build-href (if (and @webserver/!server (= out-path default-out-path)) "/build" index-html)}))
+
 (defn build-static-app! [{:as opts :keys [bundle?]}]
   (let [{:as opts :keys [download-cache-fn upload-cache-fn report-fn compile-css? expanded-paths error]}
         (try (process-build-opts (assoc opts :expand-paths? true))
@@ -245,13 +292,13 @@ app.init(opts)\n"]]))
                    (report-fn {:stage :done :duration duration})
                    opts))
                opts)
-        {state :result duration :time-ms} (eval/time-ms (write-static-app! opts state))]
+        {state :result duration :time-ms}
+        (eval/time-ms (write-static-app-2! opts state))]
     (when upload-cache-fn
       (report-fn {:stage :uploading-cache})
       (let [{duration :time-ms} (eval/time-ms (upload-cache-fn state))]
         (report-fn {:stage :done :duration duration})))
     (report-fn {:stage :finished :state state :duration duration :total-duration (eval/elapsed-ms start)})))
-(defonce ^:dynamic *build* nil)
 (alter-var-root #'clerk.builder/build-static-app!
                 (constantly (fn [opts]
                               (binding [*build* opts]

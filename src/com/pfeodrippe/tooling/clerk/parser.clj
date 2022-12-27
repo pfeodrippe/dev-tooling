@@ -247,7 +247,11 @@
         (when-not path-matched
           (println "\n\nWARNING: XRef not found for path " {:path path} "\n\n"))
         {:notebook-name notebook-name
-         :path (str "#/" path-matched)
+         :path (if (:bundle? var-changes/*build*)
+                 (str "#/" path-matched)
+                 (some-> path-matched
+                         clerk.viewer/doc-url
+                         (str/replace #"\.cljc|\.clj|\.md$" ".html")))
          :error (nil? path-matched)
          :metadata metadata})
       {:notebook-name notebook-name
