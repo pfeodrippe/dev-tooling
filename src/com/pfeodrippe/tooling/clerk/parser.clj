@@ -507,10 +507,7 @@
 (defn process-blocks [viewers doc]
   (let [updated-doc (blocks->markdown doc)]
     (-> updated-doc
-        (assoc :atom-var-name->state
-               (clerk.viewer/->viewer-eval
-                (list 'nextjournal.clerk.render/intern-atoms!
-                      (clerk.viewer/extract-clerk-atom-vars doc))))
+        (assoc :atom-var-name->state (clerk.viewer/atom-var-name->state doc))
         (update :blocks (partial into []
                                  (comp (mapcat (partial clerk.viewer/with-block-viewer doc))
                                        (map (comp clerk.viewer/process-wrapped-value
@@ -532,14 +529,13 @@
        (reagent/with-let [local-storage-key "clerk-navbar"
                           !state (reagent/atom {:toc (render/toc-items (:children toc))
                                                 :md-toc toc
-                                                :dark-mode? (render/localstorage-get
-                                                             render/local-storage-dark-mode-key)
+                                                #_ #_:dark-mode? (localstorage/get-item local-storage-dark-mode-key)
                                                 :theme {:slide-over "bg-slate-100 dark:bg-gray-800 font-sans border-r dark:border-slate-900"}
                                                 :width 220
                                                 :mobile-width 300
                                                 :local-storage-key local-storage-key
                                                 :set-hash? (not bundle?)
-                                                :open? (if-some [stored-open?
+                                                #_ #_:open? (if-some [stored-open?
                                                                  (render/localstorage-get local-storage-key)]
                                                          stored-open?
                                                          (not= :collapsed toc-visibility))})
