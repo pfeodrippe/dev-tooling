@@ -2,7 +2,7 @@
  {org.clojure/clojure {:mvn/version "1.11.1"}
   edn-query-language/eql {:mvn/version "2021.07.18"}
   com.lambdaisland/classpath {:mvn/version "0.4.44"}
-  io.github.nextjournal/clerk {:git/sha "7b70c539040f2c1873622c7bf09eab1abac53932"}
+  io.github.nextjournal/clerk {:git/sha "94eee72017d9f0eb3ccacd6df23fcc79138f794c"}
   io.github.jerems/prose {:git/tag "v78", :git/sha "6373376862"}
   djblue/portal {:mvn/version "0.33.0"}
   metosin/malli {:mvn/version "0.9.2"}
